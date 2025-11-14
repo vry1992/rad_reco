@@ -98,6 +98,9 @@ export const WhoField = (props: WhoFieldInputProps) => {
           name={callsignName}
           onChange={onCallsignChange}
           placeholder="Позивний"
+          style={{
+            marginTop: 5,
+          }}
         />
         <InputNumber<string>
           value={props.defaultValue?.peleng || null}
@@ -107,7 +110,7 @@ export const WhoField = (props: WhoFieldInputProps) => {
           step="0.5"
           stringMode
           name={pelengName}
-          style={{ width: '100%' }}
+          style={{ width: '100%', marginTop: 5 }}
           onChange={onPelengChange}
         />
       </Form.Item>

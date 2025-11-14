@@ -5,13 +5,14 @@ import 'dayjs/locale/uk';
 import { Fragment, useCallback, useEffect, type FC } from 'react';
 import { useLocation } from 'react-router';
 import type { TShip } from '../../../../types/types';
-import { FIELD_NAME_MAP } from '../../constants';
+import { TMP_FIELD_NAME_MAP } from '../../constants';
 import { FrequencyField } from './FrequencyField';
 import { TimeOfDetectionField } from './TimeOfDetectionField';
 import { TransmisionTypeField } from './TransmissionTypeField';
 import { WhoField } from './WhoField';
 
 type Props = {
+  name?: string;
   fields: string[];
   requiredFields: string[];
 };
@@ -43,7 +44,7 @@ export type BaseFieldProps = {
   placeholder?: string;
 };
 
-export const DetectionForm: FC<Props> = ({ fields, requiredFields }) => {
+export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
   const { state } = useLocation();
   const [form] = Form.useForm<DetectionFormValues>();
 
@@ -135,7 +136,8 @@ export const DetectionForm: FC<Props> = ({ fields, requiredFields }) => {
     return [...requiredFields, ...fields]
       .sort((fieldA, fieldB) => {
         return (
-          FIELD_NAME_MAP[fieldA].groupOrder - FIELD_NAME_MAP[fieldB].groupOrder
+          TMP_FIELD_NAME_MAP[fieldA].groupOrder -
+          TMP_FIELD_NAME_MAP[fieldB].groupOrder
         );
       })
       .map((field, _, arr) => {
@@ -226,7 +228,7 @@ export const DetectionForm: FC<Props> = ({ fields, requiredFields }) => {
   return (
     <Form form={form} labelAlign="left">
       <Typography.Title editable level={3} style={{ margin: 0 }}>
-        Назва радіомережі
+        {name}
       </Typography.Title>
       <Row gutter={[4, 4]}>{renderFields()}</Row>
 

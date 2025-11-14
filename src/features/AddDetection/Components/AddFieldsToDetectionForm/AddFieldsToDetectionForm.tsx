@@ -1,7 +1,7 @@
 import { FileProtectOutlined, FileUnknownOutlined } from '@ant-design/icons';
 import { Button, List, Popconfirm } from 'antd';
 import type { FC } from 'react';
-import { FIELD_NAME_MAP } from '../../constants';
+import { TMP_FIELD_NAME_MAP } from '../../constants';
 import classes from './style.module.scss';
 import { FieldsEnum } from './types';
 
@@ -22,7 +22,7 @@ export const AddFieldsToDetectionForm: FC<Props> = ({
         return (
           <List.Item>
             <div className={classes.listItem}>
-              <b>{FIELD_NAME_MAP[item].label}</b>
+              <b>{TMP_FIELD_NAME_MAP[item].label}</b>
               <div className={classes.listButtons}>
                 <Popconfirm
                   title={

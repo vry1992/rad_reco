@@ -16,3 +16,7 @@ body,
 :global(.ant-layout-content) {
   width: 100%;
 }
+
+.show-spinner {
+  filter: blur(5px)
+}

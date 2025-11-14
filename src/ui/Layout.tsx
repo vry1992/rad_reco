@@ -2,6 +2,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Layout as AntLayout, Button, Menu, theme } from 'antd';
 import React, { useState } from 'react';
 import { Outlet } from 'react-router';
+import { useLoadingSpinner } from '../hooks/useLoadingSpinner';
 import { MAIN_MENU_CONFIG } from '../routing/Router';
 
 const { Header, Content, Sider } = AntLayout;
@@ -18,13 +19,17 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const Layout: React.FC = () => {
+  console.log(2);
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  const { Spinner, showSpinner } = useLoadingSpinner();
+
   return (
     <AntLayout hasSider>
+      {showSpinner ? Spinner : null}
       <Sider
         trigger={null}
         style={siderStyle}

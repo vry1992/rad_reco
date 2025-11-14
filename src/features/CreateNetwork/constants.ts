@@ -1,6 +1,15 @@
-import type { FieldBaseFields } from '../CreateNetwork/constants';
+import { FieldsEnum } from '../AddDetection/Components/AddFieldsToDetectionForm/types';
 
-export const TMP_FIELD_NAME_MAP: {
+export type FieldBaseFields = {
+  label: string;
+  groupOrder: number;
+  name: string;
+  description: string;
+  addWith?: (keyof typeof FIELD_NAME_MAP)[];
+  removeIfAdded?: (keyof typeof FIELD_NAME_MAP)[];
+};
+
+export const FIELD_NAME_MAP: {
   [key: string]: FieldBaseFields;
 } = {
   timeOfDetection: {
@@ -8,25 +17,37 @@ export const TMP_FIELD_NAME_MAP: {
     groupOrder: 1,
     name: 'timeOfDetection',
     description: 'Додати пояснення до поля',
+    removeIfAdded: ['timeFrom', 'timeTo'],
   },
   timeFrom: {
     label: 'Час із',
     groupOrder: 2,
     name: 'timeFrom',
     description: 'Додати пояснення до поля',
+    addWith: ['timeTo'],
+    removeIfAdded: ['timeOfDetection'],
   },
-  timeTo: { label: 'Час по', groupOrder: 3, name: 'timeTo', description: '' },
+  timeTo: {
+    label: 'Час по',
+    groupOrder: 3,
+    name: 'timeTo',
+    description: 'Додати пояснення до поля',
+    addWith: ['timeFrom'],
+    removeIfAdded: ['timeOfDetection'],
+  },
   abonentFrom: {
     label: 'Хто',
     groupOrder: 4,
     name: 'abonentFrom',
     description: 'Додати пояснення до поля',
+    addWith: ['abonentTo'],
   },
   abonentTo: {
     label: 'Кого',
     groupOrder: 5,
     name: 'abonentTo',
     description: 'Додати пояснення до поля',
+    addWith: ['timeFrom'],
   },
   abonentCircular: {
     label: 'Циркуляр',
@@ -58,7 +79,6 @@ export const TMP_FIELD_NAME_MAP: {
     name: 'additionalInformation',
     description: 'Додати пояснення до поля',
   },
-
   lat: {
     label: 'Широта',
     groupOrder: 11,
@@ -77,4 +97,23 @@ export const TMP_FIELD_NAME_MAP: {
     name: 'map',
     description: 'Додати пояснення до поля',
   },
+};
+
+export const DEFAULT_FIELDS_STATE: Record<
+  keyof typeof FIELD_NAME_MAP,
+  FieldsEnum
+> = {
+  [FIELD_NAME_MAP.timeOfDetection.name]: FieldsEnum.REQUIRED,
+  [FIELD_NAME_MAP.frequency.name]: FieldsEnum.REQUIRED,
+  [FIELD_NAME_MAP.transmissionType.name]: FieldsEnum.REQUIRED,
+  [FIELD_NAME_MAP.timeFrom.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.timeTo.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentFrom.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentTo.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentCircular.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.pelengsImg.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.additionalInformation.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.lat.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.lng.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.map.name]: FieldsEnum.OFF,
 };

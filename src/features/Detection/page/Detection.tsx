@@ -1,11 +1,33 @@
 import { Col, List, Row, Typography } from 'antd';
 import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MOCK_USER } from '../../../mocks';
+import { useLoginSelectors } from '../../Login/store/slice';
+import { DetectionsService } from '../services/detections-service';
+import type { MyNetworksResponse } from '../types';
 
 export const Detection = () => {
+  const [myNetworks, setMyNetworks] = useState<MyNetworksResponse>([]);
   const navigate = useNavigate();
   const networksList = MOCK_USER.networkCommunication;
+  const {
+    me: { id },
+  } = useLoginSelectors();
+
+  const getMyNetworks = async () => {
+    try {
+      const data = await DetectionsService.getMyNetworks(id!);
+      setMyNetworks(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    id && getMyNetworks();
+  }, [id]);
+
   return (
     <Row justify="space-between" style={{ height: '100%' }} gutter={[10, 10]}>
       <Col xs={12} sm={12}>
@@ -13,7 +35,7 @@ export const Detection = () => {
           size="large"
           header={<Typography.Title level={3}>Мої мережі</Typography.Title>}
           bordered
-          dataSource={networksList}
+          dataSource={myNetworks}
           renderItem={({ id, name }) => (
             <List.Item
               style={{ cursor: 'pointer' }}
