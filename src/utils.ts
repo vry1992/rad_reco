@@ -1,13 +1,13 @@
 import type { DataNode } from 'rc-tree-select/lib/interface';
-import type { TShip } from './types/types';
+import type { IShip, IUnit } from './types/types';
 
-export const groupToShipsTreeSelect = <K extends keyof TShip>({
+export const groupToShipsTreeSelect = <K extends keyof IShip>({
   data,
   groupBy,
   mainPrefix = '',
   mainSufix = '',
 }: {
-  data: TShip[];
+  data: IShip[];
   groupBy: K;
   mainPrefix?: string;
   mainSufix?: string;
@@ -18,7 +18,7 @@ export const groupToShipsTreeSelect = <K extends keyof TShip>({
 
     if (prev) {
       prev.children?.push({
-        title: `${curr.shotType} пр. ${curr.project} ${curr.name}`,
+        title: `${curr.abbreviatedType} пр. ${curr.project} ${curr.name}`,
         value: curr.id,
         key: curr.id,
       });
@@ -27,10 +27,11 @@ export const groupToShipsTreeSelect = <K extends keyof TShip>({
         key,
         title: key,
         value: key,
-        // selectable: false,
+        selectable: false,
+        checkable: false,
         children: [
           {
-            title: `${curr.shotType} пр. ${curr.project} ${curr.name}`,
+            title: `${curr.abbreviatedType} пр. ${curr.project} ${curr.name}`,
             value: curr.id,
             key: curr.id,
           },
@@ -41,4 +42,39 @@ export const groupToShipsTreeSelect = <K extends keyof TShip>({
   }, {});
 
   return Object.values(grouped);
+};
+
+export const groupToUnitsTreeSelect = ({ data }: { data: IUnit[] }) => {
+  const map = new Map<string, DataNode>();
+
+  // Створюємо точки для кожного елемента
+  for (const u of data) {
+    map.set(u.id, {
+      title: u.abbreviatedName || u.name,
+      value: u.id,
+      children: [],
+    });
+  }
+
+  const roots: DataNode[] = [];
+
+  // Прив’язуємо дітей до батьків
+  for (const u of data) {
+    const node = map.get(u.id)!;
+
+    if (u.parent && map.has(u.parent.id)) {
+      // прив’язуємо до parent
+      const parentNode = map.get(u.parent.id)!;
+      parentNode.children!.push(node);
+    } else {
+      // root
+      roots.push(node);
+    }
+  }
+
+  return roots;
+};
+
+export const buildShipLabel = (ship: IShip) => {
+  return `${ship.abbreviatedType} пр.${ship.project} ${ship.name}`;
 };

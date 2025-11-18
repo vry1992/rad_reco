@@ -2,10 +2,11 @@ import { Form } from 'antd';
 
 import { Button, Col, Row, Typography } from 'antd';
 import 'dayjs/locale/uk';
-import { Fragment, useCallback, useEffect, type FC } from 'react';
+import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
 import { useLocation } from 'react-router';
-import type { TShip } from '../../../../types/types';
+import type { IShip, IUnit } from '../../../../types/types';
 import { TMP_FIELD_NAME_MAP } from '../../constants';
+import { AddDetectionService } from '../../services/add-detection.service';
 import { FrequencyField } from './FrequencyField';
 import { TimeOfDetectionField } from './TimeOfDetectionField';
 import { TransmisionTypeField } from './TransmissionTypeField';
@@ -22,12 +23,12 @@ export type DetectionFormValues = {
   timeFrom?: string;
   timeTo?: string;
   abonentFrom?: {
-    abonents: TShip[];
+    abonents: IShip[];
     peleng?: string;
     callsign?: string;
   };
   abonentTo?: {
-    abonents: TShip[];
+    abonents: IShip[];
     peleng?: string;
     callsign?: string;
   };
@@ -47,6 +48,8 @@ export type BaseFieldProps = {
 export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
   const { state } = useLocation();
   const [form] = Form.useForm<DetectionFormValues>();
+  const [ships, setShips] = useState<IShip[]>([]);
+  const [units, setUnits] = useState<IUnit[]>([]);
 
   useEffect(() => {
     if (state) {
@@ -71,6 +74,19 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
       }
     }
   }, [state, form]);
+
+  useEffect(() => {
+    const fetchDataForWhoFields = async () => {
+      const [rawShips, rawUnits] = await Promise.all([
+        AddDetectionService.getAllShips(),
+        AddDetectionService.getAllUnits(),
+      ]);
+      setShips(rawShips);
+      setUnits(rawUnits);
+    };
+
+    fetchDataForWhoFields();
+  }, []);
 
   const onSimpleInputChange = useCallback(
     <Name extends keyof DetectionFormValues>(
@@ -114,14 +130,14 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
     });
   };
 
-  const onAbonentToChange = (value: TShip[]) => {
+  const onAbonentToChange = (value: IShip[]) => {
     form.setFieldValue('abonentTo', {
       ...form.getFieldValue('abonentTo'),
       abonents: value,
     });
   };
 
-  const onAbonentFromChange = (value: TShip[]) => {
+  const onAbonentFromChange = (value: IShip[]) => {
     form.setFieldValue('abonentFrom', {
       ...form.getFieldValue('abonentFrom'),
       abonents: value,
@@ -190,6 +206,8 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
                   onPelengChange={onpelengChange}
                   onAbonentChange={onAbonentFromChange}
                   defaultValue={form.getFieldValue('abonentFrom')}
+                  ships={ships}
+                  units={units}
                 />
               </Col>
             )}
@@ -202,6 +220,8 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
                   onPelengChange={onAbonentToPelengChange}
                   onAbonentChange={onAbonentToChange}
                   defaultValue={form.getFieldValue('abonentTo')}
+                  ships={ships}
+                  units={units}
                 />
               </Col>
             )}
@@ -225,18 +245,21 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
       });
   }, [requiredFields, fields]);
 
+  const onSubmit = (values) => {};
+
   return (
-    <Form form={form} labelAlign="left">
+    <Form
+      form={form}
+      labelAlign="left"
+      onFinish={(values) => {
+        console.log(values);
+      }}>
       <Typography.Title editable level={3} style={{ margin: 0 }}>
         {name}
       </Typography.Title>
       <Row gutter={[4, 4]}>{renderFields()}</Row>
 
-      <Button
-        type="primary"
-        onClick={async () => {
-          console.log(form.getFieldsValue());
-        }}>
+      <Button type="primary" htmlType="submit">
         Зберегти
       </Button>
     </Form>

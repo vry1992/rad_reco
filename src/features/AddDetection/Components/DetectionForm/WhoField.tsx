@@ -8,20 +8,24 @@ import {
 
 import type { DataNode } from 'rc-tree-select/lib/interface';
 import { useState, type ChangeEvent } from 'react';
-import type { TShip } from '../../../../types/types';
-import { groupToShipsTreeSelect } from '../../../../utils';
-import { ships_MOCK } from '../mocks/mocksDetections';
+import type { IShip, IUnit } from '../../../../types/types';
+import {
+  groupToShipsTreeSelect,
+  groupToUnitsTreeSelect,
+} from '../../../../utils';
 import type { BaseFieldProps } from './DetectionForm';
 
 type WhoFieldInputProps = BaseFieldProps & {
   defaultValue: {
-    abonents: TShip[];
+    abonents: IShip[];
     peleng?: string;
     callsign?: string;
   };
   onCallsignChange: (value: string) => void;
   onPelengChange: (value: string | null) => void;
-  onAbonentChange: (value: TShip[]) => void;
+  onAbonentChange: (value: IShip[]) => void;
+  ships: IShip[];
+  units: IUnit[];
 };
 
 export const WhoField = (props: WhoFieldInputProps) => {
@@ -31,13 +35,14 @@ export const WhoField = (props: WhoFieldInputProps) => {
 
   const [value, setValue] = useState<string[]>(defaultValue);
 
-  console.log('VAL => ', value);
-
-  const ships = ships_MOCK;
   const groupedShips = groupToShipsTreeSelect({
-    data: ships,
+    data: props.ships,
     groupBy: 'project',
     mainPrefix: 'проект: ',
+  });
+
+  const groupedUnits = groupToUnitsTreeSelect({
+    data: props.units,
   });
 
   const options: TreeSelectProps['treeData'] = [
@@ -47,6 +52,13 @@ export const WhoField = (props: WhoFieldInputProps) => {
       value: 'ships',
       selectable: false,
       children: groupedShips,
+    },
+    {
+      title: 'підрозділи',
+      key: 'units',
+      value: 'units',
+      selectable: false,
+      children: groupedUnits,
     },
   ];
 
@@ -64,7 +76,7 @@ export const WhoField = (props: WhoFieldInputProps) => {
   const onAbonentChange = (newValue: string[]) => {
     setValue(newValue);
 
-    const selected = ships.filter(({ id }) => newValue.includes(id));
+    const selected = props.ships.filter(({ id }) => newValue.includes(id));
 
     props.onAbonentChange(selected);
   };
@@ -77,6 +89,8 @@ export const WhoField = (props: WhoFieldInputProps) => {
         name={props.name}
         rules={[{ required: props.required }]}>
         <TreeSelect
+          treeLine={true}
+          treeExpandAction="click"
           size="large"
           treeData={options}
           value={value}

@@ -19,7 +19,6 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const Layout: React.FC = () => {
-  console.log(2);
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },

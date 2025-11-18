@@ -30,7 +30,7 @@ export const TransmisionTypeField = (props: TransmissionTypeFieldProps) => {
       layout="vertical"
       label={props.label}
       name={props.name}
-      rules={[{ required: props.required }]}>
+      rules={[{ required: props.required, message: 'Оберіть вид передачі' }]}>
       <Select
         value={value}
         style={{ width: '100%' }}

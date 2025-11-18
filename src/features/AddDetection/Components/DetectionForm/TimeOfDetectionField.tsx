@@ -7,7 +7,7 @@ import {
   type RadioChangeEvent,
 } from 'antd';
 import ukUA from 'antd/es/locale/uk_UA';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/uk';
 import { useEffect, useState } from 'react';
 import type { BaseFieldProps } from './DetectionForm';
@@ -18,12 +18,14 @@ type TimeOfDetectionInputProps = BaseFieldProps & {
   onChange: (value: string) => void;
 };
 
+const defaultNow = dayjs().set('second', 0).set('millisecond', 0);
+
 export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
+  const [now] = useState<Dayjs>(defaultNow);
   const defaultValue =
     props.defaultValue ||
     dayjs().set('second', 0).set('millisecond', 0).toISOString();
   const [value, setValue] = useState<string>(defaultValue);
-  const now = dayjs().set('second', 0).set('millisecond', 0);
   const defaultButtonsCount = 5;
   const buttonsConfig = {
     label: (minusMinutes: number) => now.add(minusMinutes * -1, 'minute'),
@@ -72,6 +74,7 @@ export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
 
       <ConfigProvider locale={ukUA}>
         <DatePicker
+          size="large"
           value={value === null ? null : dayjs(value)}
           showTime
           showSecond={false}

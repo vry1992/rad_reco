@@ -2,9 +2,14 @@ import type { MenuProps } from 'antd';
 import { NavLink, Outlet, Route, Routes, useNavigate } from 'react-router';
 import { Layout } from '../ui/Layout';
 
-import { CustomerServiceOutlined, WifiOutlined } from '@ant-design/icons';
+import {
+  ApartmentOutlined,
+  CustomerServiceOutlined,
+  WifiOutlined,
+} from '@ant-design/icons';
 import React, { useEffect } from 'react';
 import { AddDetection } from '../features/AddDetection/page/AddDetection';
+import { CombatFormation } from '../features/CombatFormation/page/CombatFormation';
 import { CreateNetwork } from '../features/CreateNetwork/page/CreateNetwork';
 import { Detection } from '../features/Detection/page/Detection';
 import { Login } from '../features/Login/page/Login';
@@ -24,6 +29,11 @@ export const MAIN_MENU_CONFIG: MenuProps['items'] = [
     key: 'create-network',
     icon: React.createElement(WifiOutlined),
     label: <NavLink to="/create-network">Створення мережі</NavLink>,
+  },
+  {
+    key: 'combat-formation',
+    icon: React.createElement(ApartmentOutlined),
+    label: <NavLink to="/combat-formation">БЧС</NavLink>,
   },
 ];
 
@@ -73,6 +83,7 @@ export const Router = () => {
       <Route element={<AuthLayout />}>
         <Route element={<Layout />}>
           <Route path="/detection" element={<Detection />} />
+          <Route path="/combat-formation" element={<CombatFormation />} />
           <Route path="/detection/:id" element={<AddDetection />} />
           <Route path="/create-network" element={<CreateNetwork />} />
         </Route>

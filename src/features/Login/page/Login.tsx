@@ -1,6 +1,8 @@
 import type { FormProps } from 'antd';
 import { Button, Col, Form, Input, Row } from 'antd';
-import { useLoginActionCreators } from '../store/slice';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useLoginActionCreators, useLoginSelectors } from '../store/slice';
 
 type FieldType = {
   username: string;
@@ -8,7 +10,11 @@ type FieldType = {
 };
 
 export const Login = () => {
+  const navigate = useNavigate();
   const loginActionCreators = useLoginActionCreators();
+  const {
+    me: { isAuthenticated },
+  } = useLoginSelectors();
 
   const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
     loginActionCreators.login({
@@ -16,6 +22,12 @@ export const Login = () => {
       password: values.password,
     });
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/detection');
+    }
+  }, [isAuthenticated]);
 
   return (
     <Row>

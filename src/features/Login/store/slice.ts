@@ -54,7 +54,6 @@ export const counterSlice = createSlice({
       state.me = defaultState.me;
     });
     builder.addCase(loginThunks.me.fulfilled, (state, { payload }) => {
-      console.log('okoko', payload);
       state.status = StateStatus.SUCCESS;
       state.me = {
         ...payload.user,

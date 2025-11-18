@@ -1,6 +1,4 @@
 import { Form, InputNumber } from 'antd';
-import type { ValidateStatus } from 'antd/es/form/FormItem';
-import { useState } from 'react';
 import type { BaseFieldProps, DetectionFormValues } from './DetectionForm';
 
 type FrequencyInputProps = BaseFieldProps & {
@@ -9,8 +7,6 @@ type FrequencyInputProps = BaseFieldProps & {
 };
 
 export const FrequencyField = (props: FrequencyInputProps) => {
-  const [validationStatus, setValidationStatus] = useState<ValidateStatus>('');
-
   const onChange = (value: number | string | null) => {
     props.onChange?.(value ? value.toString() : null);
   };
@@ -20,8 +16,6 @@ export const FrequencyField = (props: FrequencyInputProps) => {
       layout="vertical"
       label={props.label}
       name={props.name}
-      validateStatus={validationStatus}
-      help="Should be combination of numbers & alphabets"
       rules={[
         {
           required: props.required,
