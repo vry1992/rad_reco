@@ -1,0 +1,16 @@
+// .radioGroup {
+//   display: flex;
+//   flex-direction: row;
+// }
+
+
+
+@media (max-width: 600px) {
+  .radioGroup {
+    flex-direction: column;
+  }
+
+  .formFieldOption {
+    flex-direction: column;
+  }
+}

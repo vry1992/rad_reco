@@ -10,6 +10,7 @@ import ukUA from 'antd/es/locale/uk_UA';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/uk';
 import { useEffect, useState } from 'react';
+import { DATE_TIME_FORMAT } from '../../../../constants';
 import type { BaseFieldProps } from './DetectionForm';
 
 type TimeOfDetectionInputProps = BaseFieldProps & {
@@ -82,7 +83,7 @@ export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
           showNow={false}
           onChange={onChange}
           maxDate={now}
-          format="DD.MM.YYYY HH:mm"
+          format={DATE_TIME_FORMAT}
           style={{ width: '100%' }}
         />
       </ConfigProvider>

@@ -1,19 +1,21 @@
 import { Col, List, Row, Typography } from 'antd';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { MOCK_USER } from '../../../mocks';
+import type { IDetection } from '../../../types/types';
 import { useLoginSelectors } from '../../Login/store/slice';
+import { LastNetworkDetectionPreview } from '../components/LastNetworkDetectionPreview';
 import { DetectionsService } from '../services/detections-service';
 import type { MyNetworksResponse } from '../types';
+import classes from './style.module.scss';
 
 export const Detection = () => {
   const [myNetworks, setMyNetworks] = useState<MyNetworksResponse>([]);
   const navigate = useNavigate();
-  const networksList = MOCK_USER.networkCommunication;
   const {
     me: { id },
   } = useLoginSelectors();
+
+  const lastDetections = myNetworks.map(({ detections }) => detections).flat();
 
   const getMyNetworks = async () => {
     try {
@@ -28,12 +30,20 @@ export const Detection = () => {
     id && getMyNetworks();
   }, [id]);
 
+  const onPreviewClick = useCallback((detection: IDetection) => {
+    navigate(detection.network.id, { state: detection });
+  }, []);
+
   return (
     <Row justify="space-between" style={{ height: '100%' }} gutter={[10, 10]}>
-      <Col xs={12} sm={12}>
+      <Col xs={24} sm={10}>
         <List
           size="large"
-          header={<Typography.Title level={3}>Мої мережі</Typography.Title>}
+          header={
+            <Typography.Title className={classes.title} level={3}>
+              Мої мережі
+            </Typography.Title>
+          }
           bordered
           dataSource={myNetworks}
           renderItem={({ id, name }) => (
@@ -46,42 +56,25 @@ export const Detection = () => {
         />
       </Col>
 
-      <Col xs={12} sm={12}>
+      <Col xs={24} sm={14}>
         <List
           size="large"
           header={
-            <Typography.Title level={3}>Останні виявлені</Typography.Title>
+            <Typography.Title className={classes.title} level={3}>
+              Останні виявлені
+            </Typography.Title>
           }
           bordered
-          dataSource={networksList}
-          renderItem={({ detections, name, id }) => {
-            return detections.map((detection) => {
-              const abFrom = detection.abonentFrom
-                ? detection.abonentFrom.objects.map(({ name }) => name)
-                : 'н/в';
-
-              const abTo = detection.abonentTo
-                ? detection.abonentTo.objects.map(({ name }) => name)
-                : 'н/в';
-
-              return (
-                <List.Item
-                  onClick={() => navigate(id, { state: detection })}
-                  style={{ cursor: 'pointer' }}>
-                  <List.Item.Meta
-                    title={name}
-                    description={
-                      <>
-                        {abFrom} {` => `} {abTo}{' '}
-                        {dayjs(detection.timeOfDetection).format(
-                          'DD.MM.YYYY HH:mm'
-                        )}
-                      </>
-                    }
-                  />
-                </List.Item>
-              );
-            });
+          dataSource={lastDetections}
+          renderItem={(detection) => {
+            return (
+              <List.Item
+                key={detection.id}
+                className={classes.listItem}
+                onClick={() => onPreviewClick(detection)}>
+                <LastNetworkDetectionPreview detection={detection} />
+              </List.Item>
+            );
           }}
         />
       </Col>

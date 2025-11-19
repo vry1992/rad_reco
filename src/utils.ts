@@ -78,3 +78,7 @@ export const groupToUnitsTreeSelect = ({ data }: { data: IUnit[] }) => {
 export const buildShipLabel = (ship: IShip) => {
   return `${ship.abbreviatedType} пр.${ship.project} ${ship.name}`;
 };
+
+export const buildUnitsLabel = (unit: IUnit) => {
+  return unit.abbreviatedName;
+};

@@ -9,31 +9,41 @@ import {
 import type { DataNode } from 'rc-tree-select/lib/interface';
 import { useState, type ChangeEvent } from 'react';
 import type { IShip, IUnit } from '../../../../types/types';
-import {
-  groupToShipsTreeSelect,
-  groupToUnitsTreeSelect,
-} from '../../../../utils';
+import { groupToShipsTreeSelect } from '../../../../utils';
+import { buildUnitsNesting } from '../../../CombatFormation/utils';
 import type { BaseFieldProps } from './DetectionForm';
 
 type WhoFieldInputProps = BaseFieldProps & {
   defaultValue: {
-    abonents: IShip[];
+    abonents: {
+      ship: IShip[];
+      unit: IUnit[];
+    };
     peleng?: string;
     callsign?: string;
   };
   onCallsignChange: (value: string) => void;
   onPelengChange: (value: string | null) => void;
-  onAbonentChange: (value: IShip[]) => void;
+  onAbonentChange: (value: { ship: IShip[]; unit: IUnit[] }) => void;
   ships: IShip[];
   units: IUnit[];
 };
 
 export const WhoField = (props: WhoFieldInputProps) => {
-  const defaultValue = props.defaultValue
-    ? props.defaultValue.abonents.map(({ id }) => id)
+  const defaultValue: string[] = props.defaultValue
+    ? [
+        ...props.defaultValue.abonents.ship,
+        ...props.defaultValue.abonents.unit,
+      ].map(({ id }) => id)
     : [];
 
   const [value, setValue] = useState<string[]>(defaultValue);
+  const [callsign, setCallsign] = useState<string>(
+    props.defaultValue?.callsign || ''
+  );
+  const [peleng, setPeleng] = useState<string>(
+    props.defaultValue?.peleng || '0'
+  );
 
   const groupedShips = groupToShipsTreeSelect({
     data: props.ships,
@@ -41,23 +51,25 @@ export const WhoField = (props: WhoFieldInputProps) => {
     mainPrefix: 'проект: ',
   });
 
-  const groupedUnits = groupToUnitsTreeSelect({
-    data: props.units,
+  const groupedUnits = buildUnitsNesting({
+    units: props.units,
+    hideShips: true,
   });
 
   const options: TreeSelectProps['treeData'] = [
     {
       title: 'Кораблі',
-      key: 'ships',
-      value: 'ships',
+      key: 'ship',
+      value: 'ship',
       selectable: false,
       children: groupedShips,
     },
     {
-      title: 'підрозділи',
-      key: 'units',
-      value: 'units',
+      title: 'Підрозділи',
+      key: 'unit',
+      value: 'unit',
       selectable: false,
+      checkable: false,
       children: groupedUnits,
     },
   ];
@@ -66,19 +78,27 @@ export const WhoField = (props: WhoFieldInputProps) => {
   const pelengName = `${props.name}Peleng`;
 
   const onPelengChange = (value: string | null) => {
-    props.onPelengChange(value);
+    if (value) {
+      setPeleng(value);
+      props.onPelengChange(value);
+    }
   };
 
   const onCallsignChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCallsign(e.target.value);
     props.onCallsignChange(e.target.value);
   };
 
   const onAbonentChange = (newValue: string[]) => {
     setValue(newValue);
 
-    const selected = props.ships.filter(({ id }) => newValue.includes(id));
+    const selectedShips = props.ships.filter(({ id }) => newValue.includes(id));
+    const selectedUnits = props.units.filter(({ id }) => newValue.includes(id));
 
-    props.onAbonentChange(selected);
+    props.onAbonentChange({
+      ship: selectedShips,
+      unit: selectedUnits,
+    });
   };
 
   return (
@@ -108,7 +128,7 @@ export const WhoField = (props: WhoFieldInputProps) => {
           }}
         />
         <Input
-          value={props.defaultValue?.callsign || ''}
+          value={callsign}
           name={callsignName}
           onChange={onCallsignChange}
           placeholder="Позивний"
@@ -117,7 +137,7 @@ export const WhoField = (props: WhoFieldInputProps) => {
           }}
         />
         <InputNumber<string>
-          value={props.defaultValue?.peleng || null}
+          value={peleng}
           placeholder="Пеленг"
           min="0"
           max="360"

@@ -1,8 +1,8 @@
 import { DoubleLeftOutlined } from '@ant-design/icons';
 import { Button, Col, Drawer, Row } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import type { Network } from '../../Detection/types';
+import { useLocation, useNavigate, useParams } from 'react-router';
+import type { IDetection, ITemplate } from '../../../types/types';
 import { NetworkService } from '../../Network/services/network-service';
 import { AddFieldsToDetectionForm } from '../Components/AddFieldsToDetectionForm/AddFieldsToDetectionForm';
 import { FieldsEnum } from '../Components/AddFieldsToDetectionForm/types';
@@ -11,9 +11,12 @@ import type { TFieldsSetupMap } from '../types/detection.types';
 
 export const AddDetection = () => {
   const params = useParams<{ id?: string }>();
-
+  const { state } = useLocation();
+  const prevDetection = state as IDetection;
   const navigate = useNavigate();
-  const [networkTemplate, setNetworkTemplate] = useState<Network | null>(null);
+  const [networkTemplate, setNetworkTemplate] = useState<ITemplate | null>(
+    null
+  );
   const [isNetworkConfiguratorOpen, setNetworkConfigurator] = useState(false);
 
   const [fieldsSetupMap, setFieldsSetupMap] = useState<TFieldsSetupMap>({
@@ -25,8 +28,7 @@ export const AddDetection = () => {
   useEffect(() => {
     if (!networkTemplate) return;
 
-    const { id, ...rest } = networkTemplate;
-    const { id: templateId, ...template } = rest.template;
+    const { id, ...template } = networkTemplate;
 
     const rawFieldsSetup = Object.entries(template).reduce<TFieldsSetupMap>(
       (acc: TFieldsSetupMap, [fieldName, value]) => {
@@ -62,7 +64,7 @@ export const AddDetection = () => {
     if (params.id) {
       const fetchNetwork = async () => {
         try {
-          const data = await NetworkService.getNetwork(params.id!);
+          const data = await NetworkService.getNetworkTemplate(params.id!);
           setNetworkTemplate(data);
         } catch (error) {
           console.log(error);
@@ -73,6 +75,12 @@ export const AddDetection = () => {
     }
   }, [params.id]);
 
+  useEffect(() => {
+    if (state) {
+      console.log('STATE => ', state);
+    }
+  }, [state?.id]);
+
   return (
     <>
       <Button type="primary" onClick={() => navigate(-1)}>{`<= Назад`}</Button>
@@ -82,6 +90,7 @@ export const AddDetection = () => {
             name={networkTemplate?.name}
             fields={fieldsSetupMap[FieldsEnum.ON]}
             requiredFields={fieldsSetupMap[FieldsEnum.REQUIRED]}
+            prevDetectionState={prevDetection}
           />
         </Col>
 

@@ -1,0 +1,12 @@
+.listItem {
+  width: 100%;
+  cursor: pointer;
+
+  &:hover {
+    background: #00000010;
+  }
+}
+
+.title {
+  color: #009fff !important
+}

@@ -4,6 +4,7 @@ import { useEffect, type FC } from 'react';
 import { FieldsEnum } from '../../AddDetection/Components/AddFieldsToDetectionForm/types';
 import { DEFAULT_FIELDS_STATE, FIELD_NAME_MAP } from '../constants';
 import { CreateNetworkService } from '../services/create-network.service';
+import classes from './style.module.scss';
 
 type Props = {
   userId: string;
@@ -82,17 +83,18 @@ export const CreateNetworkForm: FC<Props> = ({ userId }) => {
             name={field}
             key={field}
             normalize={(value) => Number(value)}>
-            <Flex justify="space-between" style={{ width: '40%' }}>
+            <Flex justify="space-between" className={classes.formFieldOption}>
               <Typography.Title level={5}>
                 {FIELD_NAME_MAP[field].label}
               </Typography.Title>
 
               <Radio.Group
+                className={classes.radioGroup}
                 onChange={(e: RadioChangeEvent) =>
                   changeNetworkProps(field, +e.target.value)
                 }
-                disabled={disabledFields.includes(field)}
                 block
+                disabled={disabledFields.includes(field)}
                 options={[
                   {
                     value: FieldsEnum.REQUIRED,

@@ -3,8 +3,14 @@ import { Form } from 'antd';
 import { Button, Col, Row, Typography } from 'antd';
 import 'dayjs/locale/uk';
 import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
-import { useLocation } from 'react-router';
-import type { IShip, IUnit } from '../../../../types/types';
+import { useParams } from 'react-router';
+import {
+  AbonentDirectionEnum,
+  type IDetection,
+  type IShip,
+  type ITransmitionTypes,
+  type IUnit,
+} from '../../../../types/types';
 import { TMP_FIELD_NAME_MAP } from '../../constants';
 import { AddDetectionService } from '../../services/add-detection.service';
 import { FrequencyField } from './FrequencyField';
@@ -16,6 +22,12 @@ type Props = {
   name?: string;
   fields: string[];
   requiredFields: string[];
+  prevDetectionState?: IDetection;
+};
+
+type AbonentFormValueType = {
+  ship: IShip[];
+  unit: IUnit[];
 };
 
 export type DetectionFormValues = {
@@ -23,12 +35,12 @@ export type DetectionFormValues = {
   timeFrom?: string;
   timeTo?: string;
   abonentFrom?: {
-    abonents: IShip[];
+    abonents: AbonentFormValueType;
     peleng?: string;
     callsign?: string;
   };
   abonentTo?: {
-    abonents: IShip[];
+    abonents: AbonentFormValueType;
     peleng?: string;
     callsign?: string;
   };
@@ -45,44 +57,82 @@ export type BaseFieldProps = {
   placeholder?: string;
 };
 
-export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
-  const { state } = useLocation();
+export const DetectionForm: FC<Props> = ({
+  name,
+  fields,
+  requiredFields,
+  prevDetectionState,
+}) => {
+  const params = useParams<{ id: string }>();
   const [form] = Form.useForm<DetectionFormValues>();
   const [ships, setShips] = useState<IShip[]>([]);
   const [units, setUnits] = useState<IUnit[]>([]);
+  const [transmitionTypes, setTransmitionsTypes] = useState<
+    ITransmitionTypes[]
+  >([]);
 
   useEffect(() => {
-    if (state) {
-      const abFrom = state.abonentFrom;
-      const abTo = state.abonentTo;
+    if (prevDetectionState) {
+      const fromAbonentsInfo = prevDetectionState.abonents.filter(
+        ({ role }) => role === AbonentDirectionEnum.FROM
+      );
 
-      form.setFieldValue('frequency', state.frequency);
+      const toAbonentsInfo = prevDetectionState.abonents.filter(
+        ({ role }) => role === AbonentDirectionEnum.TO
+      );
 
-      if (abFrom) {
-        form.setFieldValue('abonentFrom', {
-          abonents: abFrom.objects,
-          peleng: abFrom.peleng,
-          callsign: abFrom.callsign,
-        });
-      }
-      if (abTo) {
-        form.setFieldValue('abonentTo', {
-          abonents: abTo.objects,
-          peleng: abTo.peleng,
-          callsign: abTo.callsign,
-        });
-      }
+      form.setFieldValue('abonentFrom', {
+        abonents: fromAbonentsInfo.reduce(
+          (acc, curr) => {
+            if (curr.ship) {
+              acc.ship.push(curr.ship);
+            }
+            if (curr.unit) {
+              acc.unit.push(curr.unit);
+            }
+            return acc;
+          },
+          { ship: [], unit: [] } as AbonentFormValueType
+        ),
+        peleng: fromAbonentsInfo?.[0].peleng,
+        callsign: fromAbonentsInfo?.[0].peleng,
+      });
+
+      form.setFieldValue('abonentTo', {
+        abonents: toAbonentsInfo.reduce(
+          (acc, curr) => {
+            if (curr.ship) {
+              acc.ship.push(curr.ship);
+            }
+            if (curr.unit) {
+              acc.unit.push(curr.unit);
+            }
+            return acc;
+          },
+          { ship: [], unit: [] } as AbonentFormValueType
+        ),
+        peleng: toAbonentsInfo?.[0].peleng,
+        callsign: toAbonentsInfo?.[0].callsign,
+      });
+
+      form.setFieldValue('frequency', prevDetectionState.frequency);
+      form.setFieldValue(
+        'transmissionType',
+        prevDetectionState.transmissionType.id
+      );
     }
-  }, [state, form]);
+  }, [prevDetectionState, form]);
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
-      const [rawShips, rawUnits] = await Promise.all([
+      const [rawShips, rawUnits, rawTt] = await Promise.all([
         AddDetectionService.getAllShips(),
         AddDetectionService.getAllUnits(),
+        AddDetectionService.getTransmitionTypes(),
       ]);
       setShips(rawShips);
       setUnits(rawUnits);
+      setTransmitionsTypes(rawTt);
     };
 
     fetchDataForWhoFields();
@@ -116,28 +166,28 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
     });
   };
 
-  const onpelengChange = (value: string | null) => {
+  const onAbonentFromPelengChange = (value: string | null) => {
     form.setFieldValue('abonentFrom', {
       ...form.getFieldValue('abonentFrom'),
-      callsign: value,
+      peleng: value,
     });
   };
 
   const onAbonentToPelengChange = (value: string | null) => {
     form.setFieldValue('abonentTo', {
       ...form.getFieldValue('abonentTo'),
-      callsign: value,
+      peleng: value,
     });
   };
 
-  const onAbonentToChange = (value: IShip[]) => {
+  const onAbonentToChange = (value: { ship: IShip[]; unit: IUnit[] }) => {
     form.setFieldValue('abonentTo', {
       ...form.getFieldValue('abonentTo'),
       abonents: value,
     });
   };
 
-  const onAbonentFromChange = (value: IShip[]) => {
+  const onAbonentFromChange = (value: { ship: IShip[]; unit: IUnit[] }) => {
     form.setFieldValue('abonentFrom', {
       ...form.getFieldValue('abonentFrom'),
       abonents: value,
@@ -160,7 +210,7 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
         const commonProps = {
           name: field as DetectionFormFieldName,
           required: requiredFields.includes(field),
-          defaultValue: state
+          defaultValue: prevDetectionState
             ? form.getFieldValue(field as keyof DetectionFormValues)
             : null,
         };
@@ -203,7 +253,7 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
                   label={'Хто'}
                   {...commonProps}
                   onCallsignChange={onAbonentFromCallsignChange}
-                  onPelengChange={onpelengChange}
+                  onPelengChange={onAbonentFromPelengChange}
                   onAbonentChange={onAbonentFromChange}
                   defaultValue={form.getFieldValue('abonentFrom')}
                   ships={ships}
@@ -237,7 +287,11 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
             )}
             {field === 'transmissionType' && (
               <Col xs={24} sm={8}>
-                <TransmisionTypeField label={'Вид передачі'} {...commonProps} />
+                <TransmisionTypeField
+                  types={transmitionTypes}
+                  label={'Вид передачі'}
+                  {...commonProps}
+                />
               </Col>
             )}
           </Fragment>
@@ -245,14 +299,43 @@ export const DetectionForm: FC<Props> = ({ name, fields, requiredFields }) => {
       });
   }, [requiredFields, fields]);
 
-  const onSubmit = (values) => {};
-
   return (
     <Form
       form={form}
       labelAlign="left"
-      onFinish={(values) => {
-        console.log(values);
+      onFinish={async (values) => {
+        const payload = {
+          networkId: params.id,
+          timeOfDetection: values.timeOfDetection,
+          frequency: values.frequency,
+          transmissionType: values.transmissionType,
+          abonentFrom: values.abonentFrom
+            ? {
+                abonents: values.abonentFrom.abonents,
+                peleng: values.abonentFrom.peleng,
+                callsign: values.abonentFrom.callsign,
+              }
+            : {
+                abonents: {
+                  ships: [],
+                  units: [],
+                },
+              },
+          abonentTo: values.abonentTo
+            ? {
+                abonents: values.abonentTo.abonents,
+                peleng: values.abonentTo.peleng,
+                callsign: values.abonentTo.callsign,
+              }
+            : {
+                abonents: {
+                  ships: [],
+                  units: [],
+                },
+              },
+        };
+
+        await AddDetectionService.createDetection(payload);
       }}>
       <Typography.Title editable level={3} style={{ margin: 0 }}>
         {name}

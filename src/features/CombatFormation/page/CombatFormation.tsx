@@ -1,10 +1,14 @@
 import { HomeOutlined } from '@ant-design/icons';
 import { Tree, type TreeDataNode, type TreeProps } from 'antd';
 import { useEffect, useState } from 'react';
-import type { IShip, IUnit } from '../../../types/types';
-import { buildShipLabel } from '../../../utils';
+import type { IUnit } from '../../../types/types';
 import { AddDetectionService } from '../../AddDetection/services/add-detection.service';
+import {
+  ALLOW_NESTING_NODE_TYPE,
+  NOT_ALLOW_NESTING_NODE_TYPE,
+} from '../constants';
 import { CombatFormationService } from '../services/compbat-formation.service';
+import { buildUnitsNesting } from '../utils';
 interface TreeNodeData {
   nodeType: string;
   parentUnit: IUnit;
@@ -14,64 +18,13 @@ export interface ExtendedTreeDataNode extends TreeDataNode {
   children?: ExtendedTreeDataNode[];
 }
 
-const NOT_ALLOW_NESTING_NODE_TYPE = 'ship';
-const ALLOW_NESTING_NODE_TYPE = 'unit';
-
-const goShips = (ships: IShip[], parentUnit: IUnit): TreeDataNode[] => {
-  return ships.map((ship) => {
-    return {
-      key: ship.id,
-      title: buildShipLabel(ship),
-      children: [],
-      checkable: false,
-      allowDrop: false,
-      selectable: false,
-      data: {
-        nodeType: NOT_ALLOW_NESTING_NODE_TYPE,
-        parentUnit,
-        self: ship,
-      },
-    };
-  });
-};
-
-const buildUnitsNesting = (arr: IUnit[], parentUnit?: IUnit) => {
-  const res = arr.reduce<Record<string, TreeDataNode>>((acc, curr) => {
-    const item = {} as TreeDataNode;
-    const key = curr.id;
-    const title = curr.name;
-    const children: TreeDataNode[] = [];
-    item.key = key;
-    item.title = title;
-    item.children = children;
-    item.data = {
-      nodeType: ALLOW_NESTING_NODE_TYPE,
-      parentUnit,
-      self: curr,
-    };
-    if (curr.children?.length) {
-      item.children.push(...buildUnitsNesting(curr.children, parentUnit));
-      acc[key] = item;
-    }
-    if (curr.ships?.length) {
-      item.children.push(...goShips(curr.ships, curr));
-      acc[key] = item;
-    } else {
-      acc[key] = item;
-    }
-    return acc;
-  }, {});
-
-  return Object.values(res);
-};
-
 export const CombatFormation = () => {
   const [gData, setGData] = useState<TreeDataNode[]>([]);
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
       const rawUnits = await AddDetectionService.getAllUnits();
-      setGData(buildUnitsNesting(rawUnits));
+      setGData(buildUnitsNesting({ units: rawUnits }));
     };
 
     fetchDataForWhoFields();

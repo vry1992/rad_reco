@@ -1,8 +1,12 @@
 import { api } from '../../../services/api';
-import type { Network } from '../../Detection/types';
+import type { INetwork, ITemplate } from '../../../types/types';
 
-const getNetwork = async (networkId: string): Promise<Network> => {
+const getNetwork = async (networkId: string): Promise<INetwork> => {
   return api.get(`/network/${networkId}`);
 };
 
-export const NetworkService = { getNetwork };
+const getNetworkTemplate = async (networkId: string): Promise<ITemplate> => {
+  return api.get(`/network/${networkId}/template`);
+};
+
+export const NetworkService = { getNetwork, getNetworkTemplate };

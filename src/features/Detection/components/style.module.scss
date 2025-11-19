@@ -1,0 +1,21 @@
+.detectionPreviewContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .paragraph {
+    display: block;
+    text-align: left;
+    padding: 2px;
+    margin: 2px;
+  }
+
+  .title {
+    display: block;
+    
+  }
+  .rightAligned {
+    text-align: right;
+  }
+
+}
