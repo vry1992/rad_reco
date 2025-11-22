@@ -56,7 +56,11 @@ export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
       name={props.name}
       rules={[{ required: props.required }]}>
       {props.showHelpButtons && (
-        <Radio.Group block onChange={onSelectTime} value={value}>
+        <Radio.Group
+          block
+          buttonStyle="solid"
+          onChange={onSelectTime}
+          value={value}>
           <Radio.Button
             value={now.toISOString()}
             checked={now.toISOString() === value}>
@@ -72,7 +76,7 @@ export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
           })}
         </Radio.Group>
       )}
-
+      <br />
       <ConfigProvider locale={ukUA}>
         <DatePicker
           size="large"

@@ -15,9 +15,9 @@ export type FieldType = {
   timeOfDetection: FieldsEnum;
   timeFrom: FieldsEnum;
   timeTo: FieldsEnum;
-  abonentFrom: FieldsEnum;
-  abonentTo: FieldsEnum;
-  abonentCircular: FieldsEnum;
+  abonentsFrom: FieldsEnum;
+  abonentsTo: FieldsEnum;
+  abonentsCircular: FieldsEnum;
   frequency: FieldsEnum;
   pelengsImg: FieldsEnum;
   transmissionType: FieldsEnum;

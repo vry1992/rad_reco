@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleError } from '../errors.helper';
 import { STORAGE_AUTH_TOKEN_KEY } from '../features/Login/constants';
 
 export const api = axios.create({
@@ -21,6 +22,6 @@ api.interceptors.response.use(
     return response.data;
   },
   function (error) {
-    return Promise.reject(error);
+    return Promise.reject(handleError(error));
   }
 );

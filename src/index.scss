@@ -20,3 +20,9 @@ body,
 .show-spinner {
   filter: blur(5px)
 }
+
+@media (max-width: 600px) {
+  .ant-form-item {
+    margin-bottom: 10px;
+  }
+}

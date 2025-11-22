@@ -1,10 +1,8 @@
-import { DoubleLeftOutlined } from '@ant-design/icons';
-import { Button, Col, Drawer, Row } from 'antd';
+import { Button, Col, Row } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import type { IDetection, ITemplate } from '../../../types/types';
 import { NetworkService } from '../../Network/services/network-service';
-import { AddFieldsToDetectionForm } from '../Components/AddFieldsToDetectionForm/AddFieldsToDetectionForm';
 import { FieldsEnum } from '../Components/AddFieldsToDetectionForm/types';
 import { DetectionForm } from '../Components/DetectionForm/DetectionForm';
 import type { TFieldsSetupMap } from '../types/detection.types';
@@ -31,7 +29,7 @@ export const AddDetection = () => {
     const { id, ...template } = networkTemplate;
 
     const rawFieldsSetup = Object.entries(template).reduce<TFieldsSetupMap>(
-      (acc: TFieldsSetupMap, [fieldName, value]) => {
+      (acc: TFieldsSetupMap, [fieldName, value]: [string, FieldsEnum]) => {
         const prev = acc[value] || [];
 
         return { ...acc, [value]: [...prev, fieldName] };
@@ -75,26 +73,20 @@ export const AddDetection = () => {
     }
   }, [params.id]);
 
-  useEffect(() => {
-    if (state) {
-      console.log('STATE => ', state);
-    }
-  }, [state?.id]);
-
   return (
     <>
       <Button type="primary" onClick={() => navigate(-1)}>{`<= Назад`}</Button>
       <Row justify="space-between" style={{ height: '100%' }}>
-        <Col xs={22} sm={22}>
+        <Col xs={24}>
           <DetectionForm
-            name={networkTemplate?.name}
+            name={prevDetection?.network?.name || ''}
             fields={fieldsSetupMap[FieldsEnum.ON]}
             requiredFields={fieldsSetupMap[FieldsEnum.REQUIRED]}
             prevDetectionState={prevDetection}
           />
         </Col>
 
-        <Col xs={2} sm={2}>
+        {/* <Col xs={2} sm={2}>
           <Button
             type="primary"
             onClick={() => setNetworkConfigurator(!isNetworkConfiguratorOpen)}>
@@ -111,7 +103,7 @@ export const AddDetection = () => {
             fields={fieldsSetupMap[FieldsEnum.OFF]}
             onConfirm={onConfirmAddField}
           />
-        </Drawer>
+        </Drawer> */}
       </Row>
     </>
   );

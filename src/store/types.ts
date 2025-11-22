@@ -5,6 +5,7 @@ import {
   type AsyncThunk,
 } from '@reduxjs/toolkit';
 import { useMemo } from 'react';
+import type { LoginState } from '../features/Login/store/slice';
 import { useAppDispatch } from './helpers';
 import type { store } from './store';
 export enum StateStatus {
@@ -13,8 +14,10 @@ export enum StateStatus {
   SUCCESS,
   ERROR,
 }
-export type RootState = ReturnType<typeof store.getState>;
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
+export type RootState = {
+  login: LoginState;
+};
+
 export type AppDispatch = typeof store.dispatch;
 
 type BoundAsyncThunk<Action extends ActionCreator<any>> = (

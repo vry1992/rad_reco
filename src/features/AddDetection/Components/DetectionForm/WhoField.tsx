@@ -1,49 +1,28 @@
-import {
-  Form,
-  Input,
-  InputNumber,
-  TreeSelect,
-  type TreeSelectProps,
-} from 'antd';
+import { Button, Form, TreeSelect, type TreeSelectProps } from 'antd';
 
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { DataNode } from 'rc-tree-select/lib/interface';
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import type { IShip, IUnit } from '../../../../types/types';
 import { groupToShipsTreeSelect } from '../../../../utils';
 import { buildUnitsNesting } from '../../../CombatFormation/utils';
-import type { BaseFieldProps } from './DetectionForm';
+import type { AbonentFormValueType, BaseFieldProps } from './DetectionForm';
 
 type WhoFieldInputProps = BaseFieldProps & {
-  defaultValue: {
-    abonents: {
-      ship: IShip[];
-      unit: IUnit[];
-    };
-    peleng?: string;
-    callsign?: string;
-  };
-  onCallsignChange: (value: string) => void;
-  onPelengChange: (value: string | null) => void;
-  onAbonentChange: (value: { ship: IShip[]; unit: IUnit[] }) => void;
+  defaultValue: AbonentFormValueType;
+  onAbonentChange: (value: AbonentFormValueType) => void;
   ships: IShip[];
   units: IUnit[];
+  name: string;
 };
 
 export const WhoField = (props: WhoFieldInputProps) => {
   const defaultValue: string[] = props.defaultValue
-    ? [
-        ...props.defaultValue.abonents.ship,
-        ...props.defaultValue.abonents.unit,
-      ].map(({ id }) => id)
+    ? props.defaultValue.map(({ id }) => id)
     : [];
+  const [addCount, setAddCount] = useState<number>(defaultValue.length);
 
   const [value, setValue] = useState<string[]>(defaultValue);
-  const [callsign, setCallsign] = useState<string>(
-    props.defaultValue?.callsign || ''
-  );
-  const [peleng, setPeleng] = useState<string>(
-    props.defaultValue?.peleng || '0'
-  );
 
   const groupedShips = groupToShipsTreeSelect({
     data: props.ships,
@@ -74,80 +53,89 @@ export const WhoField = (props: WhoFieldInputProps) => {
     },
   ];
 
-  const callsignName = `${props.name}Callsign`;
-  const pelengName = `${props.name}Peleng`;
-
-  const onPelengChange = (value: string | null) => {
-    if (value) {
-      setPeleng(value);
-      props.onPelengChange(value);
-    }
-  };
-
-  const onCallsignChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCallsign(e.target.value);
-    props.onCallsignChange(e.target.value);
-  };
-
-  const onAbonentChange = (newValue: string[]) => {
-    setValue(newValue);
-
-    const selectedShips = props.ships.filter(({ id }) => newValue.includes(id));
-    const selectedUnits = props.units.filter(({ id }) => newValue.includes(id));
-
-    props.onAbonentChange({
-      ship: selectedShips,
-      unit: selectedUnits,
+  const onAbonentChange = (newValue: string) => {
+    setValue((prev) => {
+      return [...prev, newValue];
     });
   };
 
+  const onRemove = (cb: (name: number) => void, name: number) => {
+    setValue((prev) => prev.filter((_, idx) => idx !== name));
+    setAddCount((prev) => prev - 1);
+    cb(name);
+  };
+
+  useEffect(() => {
+    const selectedShips = props.ships.filter(({ id }) => value.includes(id));
+    const selectedUnits = props.units.filter(({ id }) => value.includes(id));
+
+    props.onAbonentChange([...selectedShips, ...selectedUnits]);
+  }, [value]);
+
   return (
-    <div>
-      <Form.Item
-        layout="vertical"
-        label={props.label}
-        name={props.name}
-        rules={[{ required: props.required }]}>
-        <TreeSelect
-          treeLine={true}
-          treeExpandAction="click"
-          size="large"
-          treeData={options}
-          value={value}
-          onChange={onAbonentChange}
-          multiple
-          showCheckedStrategy={TreeSelect.SHOW_CHILD}
-          filterTreeNode={(input: string, treeNode: DataNode) => {
-            const has = treeNode.children?.some(({ title }) => {
-              return title
-                ?.toString()
-                .toLowerCase()
-                .includes(input.toLowerCase());
-            });
-            return !!has;
-          }}
-        />
-        <Input
-          value={callsign}
-          name={callsignName}
-          onChange={onCallsignChange}
-          placeholder="Позивний"
-          style={{
-            marginTop: 5,
-          }}
-        />
-        <InputNumber<string>
-          value={peleng}
-          placeholder="Пеленг"
-          min="0"
-          max="360"
-          step="0.5"
-          stringMode
-          name={pelengName}
-          style={{ width: '100%', marginTop: 5 }}
-          onChange={onPelengChange}
-        />
-      </Form.Item>
-    </div>
+    <Form.List name={props.name} initialValue={defaultValue}>
+      {(fields, { add, remove }, { errors }) => (
+        <>
+          {fields.map((field, index) => {
+            return (
+              <Form.Item
+                {...field}
+                layout="vertical"
+                label={index === 0 ? props.label : ''}
+                key={field.key}>
+                <TreeSelect
+                  style={{
+                    width: '90%',
+                  }}
+                  showSearch
+                  treeLine={true}
+                  treeExpandAction="click"
+                  size="large"
+                  treeData={options}
+                  value={value[field.name]}
+                  onChange={onAbonentChange}
+                  showCheckedStrategy={TreeSelect.SHOW_CHILD}
+                  filterTreeNode={(input: string, treeNode: DataNode) => {
+                    const inputLower = input.toLowerCase();
+
+                    const titleMatch = treeNode.title
+                      ?.toString()
+                      .toLowerCase()
+                      .includes(inputLower);
+
+                    const childMatch = treeNode.children?.some((child) =>
+                      child.title?.toString().toLowerCase().includes(inputLower)
+                    );
+
+                    return !!titleMatch || !!childMatch;
+                  }}
+                />
+                {fields.length >= 1 ? (
+                  <DeleteOutlined
+                    style={{
+                      color: 'red',
+                      marginLeft: '10px',
+                    }}
+                    onClick={() => onRemove(remove, field.name)}
+                  />
+                ) : null}
+              </Form.Item>
+            );
+          })}
+          <Form.Item>
+            <Button
+              disabled={addCount > value.length}
+              onClick={() => {
+                setAddCount((prev) => prev + 1);
+                add();
+              }}
+              icon={<PlusOutlined />}>
+              {addCount === 0 ? 'Додати абонента' : `Додати варіант "АБО"`}
+            </Button>
+            <Form.ErrorList errors={errors} />
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };

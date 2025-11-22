@@ -2,10 +2,15 @@ export interface IShip {
   id: string;
   unitId: string;
   project: string;
-  abbreviatedType: string;
-  type: string;
   name: string;
   objectType: ObjectTypeEnum;
+  type: IShipType;
+}
+
+export interface IShipType {
+  id: string;
+  abbreviatedType: string;
+  name: string;
 }
 
 export interface IUnit {
@@ -32,7 +37,7 @@ export interface IDetection {
   pelengsImg: any;
   lat: any;
   lng: any;
-  additionalInformation: boolean;
+  additionalInformation: string;
   abonents: IAbonent[];
   transmissionType: ITransmitionTypes;
   network: INetwork;

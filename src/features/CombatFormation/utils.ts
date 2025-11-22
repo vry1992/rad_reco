@@ -56,7 +56,6 @@ export const buildUnitsNesting = ({
       acc[key] = item;
     }
     if (curr.ships?.length && !hideShips) {
-      console.log('here');
       item.children.push(...goShips(curr.ships, curr));
       acc[key] = item;
     } else {

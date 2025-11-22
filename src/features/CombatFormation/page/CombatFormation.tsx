@@ -1,5 +1,5 @@
 import { HomeOutlined } from '@ant-design/icons';
-import { Tree, type TreeDataNode, type TreeProps } from 'antd';
+import { Button, Tree, type TreeDataNode, type TreeProps } from 'antd';
 import { useEffect, useState } from 'react';
 import type { IUnit } from '../../../types/types';
 import { AddDetectionService } from '../../AddDetection/services/add-detection.service';
@@ -48,6 +48,7 @@ export const CombatFormation = () => {
       dragData?.parentUnit?.id &&
       dropData?.parentUnit?.id;
     const sourceId = info.dragNode.key as string;
+    debugger;
     if (!isSameUnit && dragIsShip) {
       let targetId: string | null = null;
       const nodeType = dropData?.nodeType;
@@ -58,7 +59,7 @@ export const CombatFormation = () => {
       }
       await CombatFormationService.changeShipNesting(sourceId, targetId);
     } else if (!isSameUnit && dragIsUnit) {
-      let targetId: string | null = null;
+      let targetId: string | null = (info.node?.key as string) || null;
       const nodeType = dropData?.nodeType;
       if (nodeType === NOT_ALLOW_NESTING_NODE_TYPE) {
         targetId = dropData.parentUnit?.id;
@@ -144,24 +145,35 @@ export const CombatFormation = () => {
       treeData={gData}
       titleRender={(node: TreeDataNode) => {
         return (
-          <div
-            style={{
-              textAlign: 'left',
-              padding: '10px',
-              background:
-                node?.data.nodeType === ALLOW_NESTING_NODE_TYPE
-                  ? '#00000030'
-                  : '#00000005',
-            }}>
-            {node.title}
-            {node?.data.nodeType === ALLOW_NESTING_NODE_TYPE ? (
-              <span
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {node?.data.nodeType !== NOT_ALLOW_NESTING_NODE_TYPE ? (
+              <Button
+                type="primary"
                 style={{
-                  paddingLeft: '10px',
+                  marginRight: '5px',
                 }}>
-                <HomeOutlined />
-              </span>
+                Додати
+              </Button>
             ) : null}
+            <div
+              style={{
+                textAlign: 'left',
+                padding: '10px',
+                background:
+                  node?.data.nodeType === ALLOW_NESTING_NODE_TYPE
+                    ? '#00000030'
+                    : '#00000005',
+              }}>
+              {node.title}
+              {node?.data.nodeType === ALLOW_NESTING_NODE_TYPE ? (
+                <span
+                  style={{
+                    paddingLeft: '10px',
+                  }}>
+                  <HomeOutlined />
+                </span>
+              ) : null}
+            </div>
           </div>
         );
       }}

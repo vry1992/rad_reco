@@ -5,8 +5,6 @@ export type FieldBaseFields = {
   groupOrder: number;
   name: string;
   description: string;
-  addWith?: (keyof typeof FIELD_NAME_MAP)[];
-  removeIfAdded?: (keyof typeof FIELD_NAME_MAP)[];
 };
 
 export const FIELD_NAME_MAP: {
@@ -17,42 +15,35 @@ export const FIELD_NAME_MAP: {
     groupOrder: 1,
     name: 'timeOfDetection',
     description: 'Додати пояснення до поля',
-    removeIfAdded: ['timeFrom', 'timeTo'],
   },
   timeFrom: {
     label: 'Час із',
     groupOrder: 2,
     name: 'timeFrom',
     description: 'Додати пояснення до поля',
-    addWith: ['timeTo'],
-    removeIfAdded: ['timeOfDetection'],
   },
   timeTo: {
     label: 'Час по',
     groupOrder: 3,
     name: 'timeTo',
     description: 'Додати пояснення до поля',
-    addWith: ['timeFrom'],
-    removeIfAdded: ['timeOfDetection'],
   },
-  abonentFrom: {
+  abonentsFrom: {
     label: 'Хто',
     groupOrder: 4,
-    name: 'abonentFrom',
+    name: 'abonentsFrom',
     description: 'Додати пояснення до поля',
-    addWith: ['abonentTo'],
   },
-  abonentTo: {
+  abonentsTo: {
     label: 'Кого',
     groupOrder: 5,
-    name: 'abonentTo',
+    name: 'abonentsTo',
     description: 'Додати пояснення до поля',
-    addWith: ['timeFrom'],
   },
-  abonentCircular: {
+  abonentsCircular: {
     label: 'Циркуляр',
     groupOrder: 6,
-    name: 'abonentCircular',
+    name: 'abonentsCircular',
     description: 'Додати пояснення до поля',
   },
   frequency: {
@@ -108,9 +99,9 @@ export const DEFAULT_FIELDS_STATE: Record<
   [FIELD_NAME_MAP.transmissionType.name]: FieldsEnum.REQUIRED,
   [FIELD_NAME_MAP.timeFrom.name]: FieldsEnum.OFF,
   [FIELD_NAME_MAP.timeTo.name]: FieldsEnum.OFF,
-  [FIELD_NAME_MAP.abonentFrom.name]: FieldsEnum.OFF,
-  [FIELD_NAME_MAP.abonentTo.name]: FieldsEnum.OFF,
-  [FIELD_NAME_MAP.abonentCircular.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentsFrom.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentsTo.name]: FieldsEnum.OFF,
+  [FIELD_NAME_MAP.abonentsCircular.name]: FieldsEnum.OFF,
   [FIELD_NAME_MAP.pelengsImg.name]: FieldsEnum.OFF,
   [FIELD_NAME_MAP.additionalInformation.name]: FieldsEnum.OFF,
   [FIELD_NAME_MAP.lat.name]: FieldsEnum.OFF,

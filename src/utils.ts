@@ -18,7 +18,7 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
 
     if (prev) {
       prev.children?.push({
-        title: `${curr.abbreviatedType} пр. ${curr.project} ${curr.name}`,
+        title: buildShipLabel(curr),
         value: curr.id,
         key: curr.id,
       });
@@ -31,7 +31,7 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
         checkable: false,
         children: [
           {
-            title: `${curr.abbreviatedType} пр. ${curr.project} ${curr.name}`,
+            title: buildShipLabel(curr),
             value: curr.id,
             key: curr.id,
           },
@@ -76,9 +76,34 @@ export const groupToUnitsTreeSelect = ({ data }: { data: IUnit[] }) => {
 };
 
 export const buildShipLabel = (ship: IShip) => {
-  return `${ship.abbreviatedType} пр.${ship.project} ${ship.name}`;
+  return `${ship.type.abbreviatedType} пр.${ship.project} ${ship.name}`;
 };
 
 export const buildUnitsLabel = (unit: IUnit) => {
   return unit.abbreviatedName;
 };
+
+export function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
+}
+
+// eslint-disable-next-line
+export function isInstanceOf<T extends Function>(
+  value: unknown,
+  host: T
+): value is T {
+  if (!isObject(value)) {
+    return false;
+  }
+  if (value instanceof host) {
+    return true;
+  }
+  if (
+    'name' in value &&
+    typeof value.name === 'string' &&
+    value.name === host.name
+  ) {
+    return true;
+  }
+  return false;
+}

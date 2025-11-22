@@ -16,13 +16,13 @@ export const TMP_FIELD_NAME_MAP: {
     description: 'Додати пояснення до поля',
   },
   timeTo: { label: 'Час по', groupOrder: 3, name: 'timeTo', description: '' },
-  abonentFrom: {
+  abonentsFrom: {
     label: 'Хто',
     groupOrder: 4,
     name: 'abonentFrom',
     description: 'Додати пояснення до поля',
   },
-  abonentTo: {
+  abonentsTo: {
     label: 'Кого',
     groupOrder: 5,
     name: 'abonentTo',

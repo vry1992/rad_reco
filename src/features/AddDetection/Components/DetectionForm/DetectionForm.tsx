@@ -1,4 +1,4 @@
-import { Form } from 'antd';
+import { Card, Form, Input, InputNumber } from 'antd';
 
 import { Button, Col, Row, Typography } from 'antd';
 import 'dayjs/locale/uk';
@@ -13,6 +13,7 @@ import {
 } from '../../../../types/types';
 import { TMP_FIELD_NAME_MAP } from '../../constants';
 import { AddDetectionService } from '../../services/add-detection.service';
+import { AdditionalInfoField } from './AdditionalInfoField';
 import { FrequencyField } from './FrequencyField';
 import { TimeOfDetectionField } from './TimeOfDetectionField';
 import { TransmisionTypeField } from './TransmissionTypeField';
@@ -25,27 +26,21 @@ type Props = {
   prevDetectionState?: IDetection;
 };
 
-type AbonentFormValueType = {
-  ship: IShip[];
-  unit: IUnit[];
-};
+export type AbonentFormValueType = Array<IShip | IUnit>;
 
 export type DetectionFormValues = {
   timeOfDetection?: string;
   timeFrom?: string;
   timeTo?: string;
-  abonentFrom?: {
-    abonents: AbonentFormValueType;
-    peleng?: string;
-    callsign?: string;
-  };
-  abonentTo?: {
-    abonents: AbonentFormValueType;
-    peleng?: string;
-    callsign?: string;
-  };
-  frequency: string | null;
+  abonentsFrom: Array<IShip | IUnit>;
+  pelengFrom: string;
+  callsignFrom: string;
+  abonentsTo: Array<IShip | IUnit>;
+  pelengTo: string;
+  callsignTo: string;
+  frequency: string;
   transmissionType?: string;
+  additionalInformation?: string;
 };
 
 export type DetectionFormFieldName = keyof DetectionFormValues;
@@ -73,55 +68,56 @@ export const DetectionForm: FC<Props> = ({
 
   useEffect(() => {
     if (prevDetectionState) {
-      const fromAbonentsInfo = prevDetectionState.abonents.filter(
+      const { abonents, network, id, ...rest } = prevDetectionState;
+      const fromAbonentsInfo = abonents.filter(
         ({ role }) => role === AbonentDirectionEnum.FROM
       );
 
-      const toAbonentsInfo = prevDetectionState.abonents.filter(
+      const abonentsFrom = fromAbonentsInfo.reduce<AbonentFormValueType>(
+        (acc, curr) => {
+          const item: AbonentFormValueType = [];
+          if (curr.ship) {
+            item.push(curr.ship);
+          }
+          if (curr.unit) {
+            item.push(curr.unit);
+          }
+
+          return [...acc, ...item];
+        },
+        []
+      );
+
+      const toAbonentsInfo = abonents.filter(
         ({ role }) => role === AbonentDirectionEnum.TO
       );
 
-      form.setFieldValue('abonentFrom', {
-        abonents: fromAbonentsInfo.reduce(
-          (acc, curr) => {
-            if (curr.ship) {
-              acc.ship.push(curr.ship);
-            }
-            if (curr.unit) {
-              acc.unit.push(curr.unit);
-            }
-            return acc;
-          },
-          { ship: [], unit: [] } as AbonentFormValueType
-        ),
-        peleng: fromAbonentsInfo?.[0].peleng,
-        callsign: fromAbonentsInfo?.[0].peleng,
-      });
+      const abonentsTo = toAbonentsInfo.reduce<AbonentFormValueType>(
+        (acc, curr) => {
+          const item: AbonentFormValueType = [];
+          if (curr.ship) {
+            item.push(curr.ship);
+          }
+          if (curr.unit) {
+            item.push(curr.unit);
+          }
 
-      form.setFieldValue('abonentTo', {
-        abonents: toAbonentsInfo.reduce(
-          (acc, curr) => {
-            if (curr.ship) {
-              acc.ship.push(curr.ship);
-            }
-            if (curr.unit) {
-              acc.unit.push(curr.unit);
-            }
-            return acc;
-          },
-          { ship: [], unit: [] } as AbonentFormValueType
-        ),
-        peleng: toAbonentsInfo?.[0].peleng,
-        callsign: toAbonentsInfo?.[0].callsign,
-      });
-
-      form.setFieldValue('frequency', prevDetectionState.frequency);
-      form.setFieldValue(
-        'transmissionType',
-        prevDetectionState.transmissionType.id
+          return [...acc, ...item];
+        },
+        []
       );
+      form.setFieldsValue({
+        ...rest,
+        abonentsFrom,
+        abonentsTo,
+        transmissionType: prevDetectionState.transmissionType.id,
+        pelengFrom: fromAbonentsInfo?.[0]?.peleng,
+        callsignFrom: fromAbonentsInfo?.[0]?.callsign,
+        pelengTo: toAbonentsInfo?.[0]?.peleng,
+        callsignTo: toAbonentsInfo?.[0]?.callsign,
+      });
     }
-  }, [prevDetectionState, form]);
+  }, [prevDetectionState]);
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
@@ -138,60 +134,12 @@ export const DetectionForm: FC<Props> = ({
     fetchDataForWhoFields();
   }, []);
 
-  const onSimpleInputChange = useCallback(
-    <Name extends keyof DetectionFormValues>(
-      value: DetectionFormValues[Name],
-      name: Name
-    ) => {
-      form.setFieldValue(name, value);
-    },
-    []
-  );
-
-  const onFrequencyChange = (value: string | null) => {
-    onSimpleInputChange<'frequency'>(value, 'frequency');
+  const onAbonentToChange = (value: AbonentFormValueType) => {
+    form.setFieldValue('abonentsTo', value);
   };
 
-  const onAbonentFromCallsignChange = (value: string) => {
-    form.setFieldValue('abonentFrom', {
-      ...form.getFieldValue('abonentFrom'),
-      callsign: value,
-    });
-  };
-
-  const onAbonentToCallsignChange = (value: string) => {
-    form.setFieldValue('abonentTo', {
-      ...form.getFieldValue('abonentTo'),
-      callsign: value,
-    });
-  };
-
-  const onAbonentFromPelengChange = (value: string | null) => {
-    form.setFieldValue('abonentFrom', {
-      ...form.getFieldValue('abonentFrom'),
-      peleng: value,
-    });
-  };
-
-  const onAbonentToPelengChange = (value: string | null) => {
-    form.setFieldValue('abonentTo', {
-      ...form.getFieldValue('abonentTo'),
-      peleng: value,
-    });
-  };
-
-  const onAbonentToChange = (value: { ship: IShip[]; unit: IUnit[] }) => {
-    form.setFieldValue('abonentTo', {
-      ...form.getFieldValue('abonentTo'),
-      abonents: value,
-    });
-  };
-
-  const onAbonentFromChange = (value: { ship: IShip[]; unit: IUnit[] }) => {
-    form.setFieldValue('abonentFrom', {
-      ...form.getFieldValue('abonentFrom'),
-      abonents: value,
-    });
+  const onAbonentFromChange = (value: AbonentFormValueType) => {
+    form.setFieldValue('abonentsFrom', value);
   };
 
   const onTimeOfDetectionChange = (value: string) => {
@@ -208,11 +156,8 @@ export const DetectionForm: FC<Props> = ({
       })
       .map((field, _, arr) => {
         const commonProps = {
-          name: field as DetectionFormFieldName,
+          value: form.getFieldValue(field as DetectionFormFieldName),
           required: requiredFields.includes(field),
-          defaultValue: prevDetectionState
-            ? form.getFieldValue(field as keyof DetectionFormValues)
-            : null,
         };
 
         return (
@@ -221,6 +166,7 @@ export const DetectionForm: FC<Props> = ({
               <Col xs={24}>
                 <TimeOfDetectionField
                   label={'Час виявлення'}
+                  name="timeOfDetection"
                   showHelpButtons={true}
                   onChange={onTimeOfDetectionChange}
                   {...commonProps}
@@ -231,6 +177,7 @@ export const DetectionForm: FC<Props> = ({
               <Col xs={24} sm={arr.includes('timeTo') ? 12 : 24}>
                 <TimeOfDetectionField
                   label={'Відмічався із'}
+                  name="timeFrom"
                   showHelpButtons={false}
                   {...commonProps}
                   onChange={onTimeOfDetectionChange}
@@ -240,6 +187,7 @@ export const DetectionForm: FC<Props> = ({
             {field === 'timeTo' && (
               <Col xs={24} sm={arr.includes('timeFrom') ? 12 : 24}>
                 <TimeOfDetectionField
+                  name="timeTo"
                   label={'Відмічався по'}
                   showHelpButtons={false}
                   {...commonProps}
@@ -247,49 +195,108 @@ export const DetectionForm: FC<Props> = ({
                 />
               </Col>
             )}
-            {field === 'abonentFrom' && (
-              <Col xs={24} sm={arr.includes('abonentTo') ? 12 : 24}>
-                <WhoField
-                  label={'Хто'}
-                  {...commonProps}
-                  onCallsignChange={onAbonentFromCallsignChange}
-                  onPelengChange={onAbonentFromPelengChange}
-                  onAbonentChange={onAbonentFromChange}
-                  defaultValue={form.getFieldValue('abonentFrom')}
-                  ships={ships}
-                  units={units}
-                />
+            {field === 'abonentsFrom' && (
+              <Col xs={24} sm={arr.includes('abonentsTo') ? 12 : 24}>
+                <Card title="Абонент 'Хто'" style={{ width: '100%' }}>
+                  <WhoField
+                    label={'Хто'}
+                    name="abonentsFrom"
+                    {...commonProps}
+                    onAbonentChange={onAbonentFromChange}
+                    defaultValue={form.getFieldValue('abonentsFrom')}
+                    ships={ships}
+                    units={units}
+                  />
+                  <Form.Item
+                    layout="vertical"
+                    label={'Позивний'}
+                    name={'callsignFrom'}>
+                    <Input
+                      {...commonProps}
+                      style={{
+                        marginTop: 5,
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    layout="vertical"
+                    label={'Пеленг'}
+                    name={'pelengFrom'}>
+                    <InputNumber<string>
+                      {...commonProps}
+                      min="0"
+                      max="360"
+                      step="0.5"
+                      stringMode
+                      style={{ width: '100%', marginTop: 5 }}
+                    />
+                  </Form.Item>
+                </Card>
               </Col>
             )}
-            {field === 'abonentTo' && (
-              <Col xs={24} sm={arr.includes('abonentFrom') ? 12 : 24}>
-                <WhoField
-                  label={'Кого'}
-                  {...commonProps}
-                  onCallsignChange={onAbonentToCallsignChange}
-                  onPelengChange={onAbonentToPelengChange}
-                  onAbonentChange={onAbonentToChange}
-                  defaultValue={form.getFieldValue('abonentTo')}
-                  ships={ships}
-                  units={units}
-                />
+            {field === 'abonentsTo' && (
+              <Col xs={24} sm={arr.includes('abonentsFrom') ? 12 : 24}>
+                <Card title="Абонент 'Кого'" style={{ width: '100%' }}>
+                  <WhoField
+                    label={'Кого'}
+                    {...commonProps}
+                    name="abonentsTo"
+                    onAbonentChange={onAbonentToChange}
+                    defaultValue={form.getFieldValue('abonentsTo')}
+                    ships={ships}
+                    units={units}
+                  />
+                  <Form.Item
+                    layout="vertical"
+                    label={'Позивний'}
+                    name={'callsignTo'}>
+                    <Input
+                      {...commonProps}
+                      style={{
+                        marginTop: 5,
+                      }}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    layout="vertical"
+                    label={'Пеленг'}
+                    name={'pelengTo'}>
+                    <InputNumber<string>
+                      {...commonProps}
+                      min="0"
+                      max="360"
+                      step="0.5"
+                      stringMode
+                      style={{ width: '100%', marginTop: 5 }}
+                    />
+                  </Form.Item>
+                </Card>
               </Col>
             )}
             {field === 'frequency' && (
-              <Col xs={24} sm={8}>
+              <Col xs={24} sm={12}>
                 <FrequencyField
                   label={'Частота'}
+                  name="frequency"
                   {...commonProps}
-                  onChange={onFrequencyChange}
-                  defaultValue={form.getFieldValue('frequency') || null}
                 />
               </Col>
             )}
             {field === 'transmissionType' && (
-              <Col xs={24} sm={8}>
+              <Col xs={24} sm={12}>
                 <TransmisionTypeField
+                  name="transmissionType"
                   types={transmitionTypes}
                   label={'Вид передачі'}
+                  {...commonProps}
+                />
+              </Col>
+            )}
+            {field === 'additionalInformation' && (
+              <Col xs={24} sm={24}>
+                <AdditionalInfoField
+                  name="additionalInformation"
+                  label={'Додаткова інформація'}
                   {...commonProps}
                 />
               </Col>
@@ -306,39 +313,14 @@ export const DetectionForm: FC<Props> = ({
       onFinish={async (values) => {
         const payload = {
           networkId: params.id,
-          timeOfDetection: values.timeOfDetection,
-          frequency: values.frequency,
-          transmissionType: values.transmissionType,
-          abonentFrom: values.abonentFrom
-            ? {
-                abonents: values.abonentFrom.abonents,
-                peleng: values.abonentFrom.peleng,
-                callsign: values.abonentFrom.callsign,
-              }
-            : {
-                abonents: {
-                  ships: [],
-                  units: [],
-                },
-              },
-          abonentTo: values.abonentTo
-            ? {
-                abonents: values.abonentTo.abonents,
-                peleng: values.abonentTo.peleng,
-                callsign: values.abonentTo.callsign,
-              }
-            : {
-                abonents: {
-                  ships: [],
-                  units: [],
-                },
-              },
+          ...values,
         };
-
         await AddDetectionService.createDetection(payload);
       }}>
-      <Typography.Title editable level={3} style={{ margin: 0 }}>
-        {name}
+      <Typography.Title
+        level={3}
+        style={{ margin: 0, textAlign: 'left', marginBottom: '20px' }}>
+        Виявлено мережу: {name}
       </Typography.Title>
       <Row gutter={[4, 4]}>{renderFields()}</Row>
 
