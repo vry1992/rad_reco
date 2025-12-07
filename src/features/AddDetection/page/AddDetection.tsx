@@ -8,7 +8,7 @@ import { DetectionForm } from '../Components/DetectionForm/DetectionForm';
 import type { TFieldsSetupMap } from '../types/detection.types';
 
 export const AddDetection = () => {
-  const params = useParams<{ id?: string }>();
+  const params = useParams<{ networkId: string }>();
   const { state } = useLocation();
   const prevDetection = state as IDetection;
   const navigate = useNavigate();
@@ -59,10 +59,12 @@ export const AddDetection = () => {
   );
 
   useEffect(() => {
-    if (params.id) {
+    if (params.networkId) {
       const fetchNetwork = async () => {
         try {
-          const data = await NetworkService.getNetworkTemplate(params.id!);
+          const data = await NetworkService.getNetworkTemplate(
+            params.networkId!
+          );
           setNetworkTemplate(data);
         } catch (error) {
           console.log(error);
@@ -71,13 +73,13 @@ export const AddDetection = () => {
 
       fetchNetwork();
     }
-  }, [params.id]);
+  }, [params.networkId]);
 
   return (
     <>
       <Button type="primary" onClick={() => navigate(-1)}>{`<= Назад`}</Button>
-      <Row justify="space-between" style={{ height: '100%' }}>
-        <Col xs={24}>
+      <Row justify="space-between">
+        <Col md={{ span: 18, offset: 3 }} xs={{ span: 24, offset: 0 }}>
           <DetectionForm
             name={prevDetection?.network?.name || ''}
             fields={fieldsSetupMap[FieldsEnum.ON]}

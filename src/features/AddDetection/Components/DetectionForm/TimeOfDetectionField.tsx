@@ -19,9 +19,8 @@ type TimeOfDetectionInputProps = BaseFieldProps & {
   onChange: (value: string) => void;
 };
 
-const defaultNow = dayjs().set('second', 0).set('millisecond', 0);
-
 export const TimeOfDetectionField = (props: TimeOfDetectionInputProps) => {
+  const defaultNow = dayjs().set('second', 0).set('millisecond', 0);
   const [now] = useState<Dayjs>(defaultNow);
   const defaultValue =
     props.defaultValue ||

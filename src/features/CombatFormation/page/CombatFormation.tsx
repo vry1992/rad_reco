@@ -3,12 +3,13 @@ import { Button, Tree, type TreeDataNode, type TreeProps } from 'antd';
 import { useEffect, useState } from 'react';
 import type { IUnit } from '../../../types/types';
 import { AddDetectionService } from '../../AddDetection/services/add-detection.service';
+import { AddObjetcContainer } from '../components/AddObjetcContainer';
 import {
   ALLOW_NESTING_NODE_TYPE,
   NOT_ALLOW_NESTING_NODE_TYPE,
 } from '../constants';
 import { CombatFormationService } from '../services/compbat-formation.service';
-import { buildUnitsNesting } from '../utils';
+import { buildUnitsNestingForTree } from '../utils';
 interface TreeNodeData {
   nodeType: string;
   parentUnit: IUnit;
@@ -20,11 +21,12 @@ export interface ExtendedTreeDataNode extends TreeDataNode {
 
 export const CombatFormation = () => {
   const [gData, setGData] = useState<TreeDataNode[]>([]);
+  const [openForm, setOpenForm] = useState(false);
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
       const rawUnits = await AddDetectionService.getAllUnits();
-      setGData(buildUnitsNesting({ units: rawUnits }));
+      setGData(buildUnitsNestingForTree({ units: rawUnits, selectedIds: [] }));
     };
 
     fetchDataForWhoFields();
@@ -48,7 +50,6 @@ export const CombatFormation = () => {
       dragData?.parentUnit?.id &&
       dropData?.parentUnit?.id;
     const sourceId = info.dragNode.key as string;
-    debugger;
     if (!isSameUnit && dragIsShip) {
       let targetId: string | null = null;
       const nodeType = dropData?.nodeType;
@@ -125,58 +126,62 @@ export const CombatFormation = () => {
   };
 
   return (
-    <Tree
-      className="draggable-tree"
-      draggable
-      blockNode
-      onDrop={onDrop}
-      allowDrop={({ dropNode, dragNode, dropPosition }) => {
-        const dragIsShip =
-          dragNode.data?.nodeType === NOT_ALLOW_NESTING_NODE_TYPE;
-        const dropIsShip =
-          dropNode.data?.nodeType === NOT_ALLOW_NESTING_NODE_TYPE;
+    <>
+      <AddObjetcContainer open={openForm} onClose={() => setOpenForm(false)} />
+      <Tree
+        className="draggable-tree"
+        draggable
+        blockNode
+        onDrop={onDrop}
+        allowDrop={({ dropNode, dragNode, dropPosition }) => {
+          const dragIsShip =
+            dragNode.data?.nodeType === NOT_ALLOW_NESTING_NODE_TYPE;
+          const dropIsShip =
+            dropNode.data?.nodeType === NOT_ALLOW_NESTING_NODE_TYPE;
 
-        if (dragIsShip && dropIsShip && dropPosition === 0) {
-          return false;
-        }
+          if (dragIsShip && dropIsShip && dropPosition === 0) {
+            return false;
+          }
 
-        return true;
-      }}
-      treeData={gData}
-      titleRender={(node: TreeDataNode) => {
-        return (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            {node?.data.nodeType !== NOT_ALLOW_NESTING_NODE_TYPE ? (
-              <Button
-                type="primary"
-                style={{
-                  marginRight: '5px',
-                }}>
-                Додати
-              </Button>
-            ) : null}
-            <div
-              style={{
-                textAlign: 'left',
-                padding: '10px',
-                background:
-                  node?.data.nodeType === ALLOW_NESTING_NODE_TYPE
-                    ? '#00000030'
-                    : '#00000005',
-              }}>
-              {node.title}
-              {node?.data.nodeType === ALLOW_NESTING_NODE_TYPE ? (
-                <span
+          return true;
+        }}
+        treeData={gData}
+        titleRender={(node: TreeDataNode) => {
+          return (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {node?.data.nodeType !== NOT_ALLOW_NESTING_NODE_TYPE ? (
+                <Button
+                  onClick={() => setOpenForm(true)}
+                  type="primary"
                   style={{
-                    paddingLeft: '10px',
+                    marginRight: '5px',
                   }}>
-                  <HomeOutlined />
-                </span>
+                  Додати
+                </Button>
               ) : null}
+              <div
+                style={{
+                  textAlign: 'left',
+                  padding: '10px',
+                  background:
+                    node?.data.nodeType === ALLOW_NESTING_NODE_TYPE
+                      ? '#00000030'
+                      : '#00000005',
+                }}>
+                {node.title}
+                {node?.data.nodeType === ALLOW_NESTING_NODE_TYPE ? (
+                  <span
+                    style={{
+                      paddingLeft: '10px',
+                    }}>
+                    <HomeOutlined />
+                  </span>
+                ) : null}
+              </div>
             </div>
-          </div>
-        );
-      }}
-    />
+          );
+        }}
+      />
+    </>
   );
 };

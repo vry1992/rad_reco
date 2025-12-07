@@ -1,11 +1,15 @@
 import { FilterOutlined } from '@ant-design/icons';
 import { Form, Input } from 'antd';
-import type { ChangeEvent } from 'react';
+import { useEffect, type ChangeEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { FILTER_SEARCH_KEY } from '../constants';
 
 export const FilterForm = () => {
   const [, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    setSearchParams('');
+  }, []);
   return (
     <Form
       name="layout-multiple-horizontal"

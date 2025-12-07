@@ -35,6 +35,12 @@ export const CreateNetworkForm: FC<Props> = ({ userId }) => {
   const disabledFields = [
     FIELD_NAME_MAP.frequency.name,
     FIELD_NAME_MAP.transmissionType.name,
+    FIELD_NAME_MAP.timeFrom.name,
+    FIELD_NAME_MAP.timeTo.name,
+    FIELD_NAME_MAP.abonentsCircular.name,
+    FIELD_NAME_MAP.lat.name,
+    FIELD_NAME_MAP.lng.name,
+    FIELD_NAME_MAP.map.name,
   ];
 
   const [form] = Form.useForm<FieldType>();

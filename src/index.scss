@@ -26,3 +26,59 @@ body,
     margin-bottom: 10px;
   }
 }
+
+.floating-form-item .ant-form-item-label {
+  display: none;
+}
+
+.floating-container {
+  position: relative;
+  width: 100%;
+}
+
+.floating-container input {
+  height: 40px !important;
+  font-size: 16px;
+}
+
+.floating-container .ant-input-number label,
+.floating-container label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8c8c8c;
+  font-size: 16px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 0 5px;
+}
+
+.floating-container:has(.ant-input-number-input:not([value=""])) label {
+  top: 4px;
+  font-size: 12px;
+  color: #1677ff;
+}
+
+.floating-container textarea:focus+label,
+.floating-container textarea:not([value=""]) +label,
+.floating-container:has(.ant-select-selection-item) label,
+.floating-container:has(.ant-select-selection-search-input[aria-expanded=true]) label {
+  top: 0px;
+  font-size: 12px;
+  color: #1677ff;
+}
+
+.floating-container .ant-input-number-focused+label,
+.floating-container input:focus+label,
+.floating-container input:not(:placeholder-shown)+label {
+  top: 0px;
+  font-size: 12px;
+  color: #1677ff;
+}
+
+.floating-form-item.ant-form-item-has-error .floating-container input:focus+label,
+.floating-form-item.ant-form-item-has-error .floating-container input:not(:placeholder-shown)+label {
+  color: #ff4d4f;
+}

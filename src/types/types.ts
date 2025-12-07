@@ -5,6 +5,7 @@ export interface IShip {
   name: string;
   objectType: ObjectTypeEnum;
   type: IShipType;
+  unit?: IUnit;
 }
 
 export interface IShipType {
@@ -21,6 +22,11 @@ export interface IUnit {
   children: IUnit[];
   objectType: ObjectTypeEnum;
   ships: IShip[];
+}
+
+export interface IAircraft {
+  id: string;
+  name: string;
 }
 
 export interface ITransmitionTypes {
@@ -45,11 +51,13 @@ export interface IDetection {
 
 export interface IAbonent {
   id: string;
-  peleng: string;
-  callsign?: string;
   role: AbonentDirectionEnum;
+  conjunctionType: ConjunctionTypeEnum;
+  peleng?: string;
+  callsign?: string;
   ship?: IShip;
   unit?: IUnit;
+  aircraft?: IAircraft;
 }
 
 export interface ITemplate {
@@ -87,4 +95,15 @@ export enum AbonentDirectionEnum {
   FROM,
   TO,
   CIRCULAR,
+}
+
+export enum ConjunctionTypeEnum {
+  MAIN,
+  OR,
+  AND,
+}
+
+export interface IPagination {
+  skip: number;
+  take: number;
 }

@@ -2,6 +2,7 @@ import { Col, Divider, List, Row, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { IDetection, INetwork } from '../../../types/types';
+import { debounce } from '../../../utils';
 import { useLoginSelectors } from '../../Login/store/slice';
 import { FilterForm } from '../components/FilterForm';
 import { LastNetworkDetectionPreview } from '../components/LastNetworkDetectionPreview';
@@ -26,6 +27,7 @@ export const Detection = () => {
         skip: 0,
         limit: 10,
         userId,
+        filter,
       });
       setMyNetworks(my);
       setLastDetections(rawLastDetections);
@@ -37,7 +39,9 @@ export const Detection = () => {
   useEffect(() => {
     const filter = searchParams.get(FILTER_SEARCH_KEY) || '';
     if (id) {
-      getMyNetworks(id, filter);
+      debounce(() => {
+        getMyNetworks(id, filter);
+      });
     }
   }, [searchParams, id]);
 
@@ -51,7 +55,7 @@ export const Detection = () => {
         <FilterForm />
       </Row>
       <Divider />
-      <Row justify="space-between" style={{ height: '100%' }} gutter={[10, 10]}>
+      <Row justify="space-between" gutter={[10, 10]}>
         <Col xs={24} sm={10}>
           <List
             size="large"
@@ -64,7 +68,7 @@ export const Detection = () => {
             dataSource={myNetworks}
             renderItem={({ id, name }) => (
               <List.Item
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', textAlign: 'left' }}
                 onClick={() => navigate(id)}>
                 {name}
               </List.Item>

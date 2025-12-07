@@ -1,7 +1,7 @@
-import { Typography } from 'antd';
+import { Image, Typography } from 'antd';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
-import { Fragment, type FC } from 'react';
+import { Fragment, useEffect, useState, type FC } from 'react';
 import { DATE_TIME_FORMAT } from '../../../constants';
 import {
   AbonentDirectionEnum,
@@ -10,6 +10,7 @@ import {
   type IUnit,
 } from '../../../types/types';
 import { buildShipLabel, buildUnitsLabel } from '../../../utils';
+import { DetectionsService } from '../services/detections-service';
 import classes from './style.module.scss';
 
 type Props = {
@@ -22,6 +23,7 @@ const separator = ' / ';
 
 export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
   const { network, abonents, timeOfDetection } = detection;
+  const [fromImg, setFromImg] = useState<string | undefined>();
 
   const data = abonents.reduce<Record<AbonentDirectionEnum, DirectionData>>(
     (acc, curr) => {
@@ -65,6 +67,22 @@ export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
 
   const to = [...toShips, ...toUnits].join(separator);
 
+  useEffect(() => {
+    const aaa = async () => {
+      const data = await DetectionsService.getScreenshot(
+        detection.network.id,
+        detection.id,
+        'from.png'
+      );
+      if (data.size) {
+        const fromImgUrl = URL.createObjectURL(data);
+        setFromImg(fromImgUrl);
+      }
+    };
+
+    aaa();
+  }, []);
+
   return (
     <Fragment>
       <div className={classes.detectionPreviewContainer}>
@@ -98,7 +116,10 @@ export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
           className={classNames([classes.paragraph, classes.rightAligned])}>
           <b>{dayjs(timeOfDetection).format(DATE_TIME_FORMAT)}</b>
         </Typography.Paragraph>
+        <Image src={fromImg} width={'160px'} />
       </div>
+
+      {/* <img src={fromImg} alt="File" /> */}
     </Fragment>
   );
 };

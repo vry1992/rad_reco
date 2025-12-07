@@ -5,7 +5,8 @@ import type { DataNode } from 'rc-tree-select/lib/interface';
 import { useEffect, useState } from 'react';
 import type { IShip, IUnit } from '../../../../types/types';
 import { groupToShipsTreeSelect } from '../../../../utils';
-import { buildUnitsNesting } from '../../../CombatFormation/utils';
+import { buildUnitsNestingForTree } from '../../../CombatFormation/utils';
+import { buildUnitsNesting } from '../../utils';
 import type { AbonentFormValueType, BaseFieldProps } from './DetectionForm';
 
 type WhoFieldInputProps = BaseFieldProps & {
@@ -14,25 +15,33 @@ type WhoFieldInputProps = BaseFieldProps & {
   ships: IShip[];
   units: IUnit[];
   name: string;
+  selectedIds: string[];
 };
 
 export const WhoField = (props: WhoFieldInputProps) => {
-  const defaultValue: string[] = props.defaultValue
-    ? props.defaultValue.map(({ id }) => id)
-    : [];
-  const [addCount, setAddCount] = useState<number>(defaultValue.length);
+  const [addCount, setAddCount] = useState<number>(0);
 
-  const [value, setValue] = useState<string[]>(defaultValue);
+  const [value, setValue] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (props.defaultValue) {
+      const ids = props.defaultValue.map(({ id }) => id);
+      setValue(ids);
+      setAddCount(ids.length);
+    }
+  }, [props.defaultValue]);
 
   const groupedShips = groupToShipsTreeSelect({
     data: props.ships,
     groupBy: 'project',
     mainPrefix: 'проект: ',
+    selectedIds: props.selectedIds,
   });
 
-  const groupedUnits = buildUnitsNesting({
-    units: props.units,
+  const groupedUnits = buildUnitsNestingForTree({
+    units: buildUnitsNesting(props.units),
     hideShips: true,
+    selectedIds: props.selectedIds,
   });
 
   const options: TreeSelectProps['treeData'] = [
@@ -53,28 +62,29 @@ export const WhoField = (props: WhoFieldInputProps) => {
     },
   ];
 
-  const onAbonentChange = (newValue: string) => {
-    setValue((prev) => {
-      return [...prev, newValue];
-    });
-  };
-
-  const onRemove = (cb: (name: number) => void, name: number) => {
-    setValue((prev) => prev.filter((_, idx) => idx !== name));
-    setAddCount((prev) => prev - 1);
-    cb(name);
-  };
-
-  useEffect(() => {
-    const selectedShips = props.ships.filter(({ id }) => value.includes(id));
-    const selectedUnits = props.units.filter(({ id }) => value.includes(id));
-
+  const changeReaction = (ids: string[]) => {
+    const selectedShips = props.ships.filter(({ id }) => ids.includes(id));
+    const selectedUnits = props.units.filter(({ id }) => ids.includes(id));
     props.onAbonentChange([...selectedShips, ...selectedUnits]);
-  }, [value]);
+  };
+
+  const onAbonentChange = (added: string) => {
+    const newValue = [...value, added];
+    setValue(newValue);
+    setAddCount((prev) => prev + 1);
+    changeReaction(newValue);
+  };
+
+  const onRemove = (name: number) => {
+    const newValue = value.filter((_, idx) => idx !== name);
+    setValue(newValue);
+    setAddCount((prev) => prev - 1);
+    changeReaction(newValue);
+  };
 
   return (
-    <Form.List name={props.name} initialValue={defaultValue}>
-      {(fields, { add, remove }, { errors }) => (
+    <Form.List name={props.name}>
+      {(fields, { add }, { errors }) => (
         <>
           {fields.map((field, index) => {
             return (
@@ -116,22 +126,41 @@ export const WhoField = (props: WhoFieldInputProps) => {
                       color: 'red',
                       marginLeft: '10px',
                     }}
-                    onClick={() => onRemove(remove, field.name)}
+                    onClick={() => onRemove(field.name)}
                   />
                 ) : null}
               </Form.Item>
             );
           })}
           <Form.Item>
-            <Button
-              disabled={addCount > value.length}
-              onClick={() => {
-                setAddCount((prev) => prev + 1);
-                add();
-              }}
-              icon={<PlusOutlined />}>
-              {addCount === 0 ? 'Додати абонента' : `Додати варіант "АБО"`}
-            </Button>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+              }}>
+              {addCount === 0 ? (
+                <Button
+                  disabled={addCount > value.length}
+                  onClick={() => {
+                    setAddCount((prev) => prev + 1);
+                    add();
+                  }}
+                  icon={<PlusOutlined />}>
+                  Додати абонента
+                </Button>
+              ) : (
+                <Button
+                  disabled={addCount > value.length}
+                  onClick={() => {
+                    setAddCount((prev) => prev + 1);
+                    add();
+                  }}
+                  icon={<PlusOutlined />}>
+                  Додати варіант "АБО"
+                </Button>
+              )}
+            </div>
+
             <Form.ErrorList errors={errors} />
           </Form.Item>
         </>

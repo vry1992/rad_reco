@@ -28,12 +28,14 @@ export type BuildNestingProps = {
   units: IUnit[];
   parentUnit?: IUnit;
   hideShips?: boolean;
+  selectedIds: string[];
 };
 
-export const buildUnitsNesting = ({
+export const buildUnitsNestingForTree = ({
   units,
   parentUnit,
   hideShips,
+  selectedIds,
 }: BuildNestingProps) => {
   const res = units.reduce<Record<string, TreeDataNode>>((acc, curr) => {
     const item = {} as TreeDataNode;
@@ -41,6 +43,7 @@ export const buildUnitsNesting = ({
     const title = curr.name;
     const children: TreeDataNode[] = [];
     item.key = key;
+    item.disabled = selectedIds.includes(curr.id);
     item.value = key;
     item.title = title;
     item.children = children;
@@ -51,7 +54,12 @@ export const buildUnitsNesting = ({
     };
     if (curr.children?.length) {
       item.children.push(
-        ...buildUnitsNesting({ units: curr.children, parentUnit, hideShips })
+        ...buildUnitsNestingForTree({
+          units: curr.children,
+          parentUnit,
+          hideShips,
+          selectedIds,
+        })
       );
       acc[key] = item;
     }

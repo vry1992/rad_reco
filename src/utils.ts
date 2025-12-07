@@ -6,11 +6,13 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
   groupBy,
   mainPrefix = '',
   mainSufix = '',
+  selectedIds,
 }: {
   data: IShip[];
   groupBy: K;
   mainPrefix?: string;
   mainSufix?: string;
+  selectedIds: string[];
 }) => {
   const grouped = data.reduce<Record<string, DataNode>>((acc, curr) => {
     const key = `${mainPrefix} ${String(curr[groupBy])} ${mainSufix}`.trim();
@@ -21,6 +23,7 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
         title: buildShipLabel(curr),
         value: curr.id,
         key: curr.id,
+        disabled: selectedIds.includes(curr.id),
       });
     } else {
       acc[key] = {
@@ -34,6 +37,7 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
             title: buildShipLabel(curr),
             value: curr.id,
             key: curr.id,
+            disabled: selectedIds.includes(curr.id),
           },
         ],
       };
@@ -47,7 +51,6 @@ export const groupToShipsTreeSelect = <K extends keyof IShip>({
 export const groupToUnitsTreeSelect = ({ data }: { data: IUnit[] }) => {
   const map = new Map<string, DataNode>();
 
-  // Створюємо точки для кожного елемента
   for (const u of data) {
     map.set(u.id, {
       title: u.abbreviatedName || u.name,
@@ -107,3 +110,13 @@ export function isInstanceOf<T extends Function>(
   }
   return false;
 }
+
+let _timeout: number | null = null;
+
+export const debounce = (cb: () => void, ms: number = 300) => {
+  if (_timeout) {
+    clearTimeout(_timeout);
+  }
+
+  _timeout = setTimeout(cb, ms);
+};

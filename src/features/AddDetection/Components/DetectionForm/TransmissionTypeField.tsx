@@ -1,24 +1,17 @@
-import { Form, Select } from 'antd';
+import { Select } from 'antd';
 import 'dayjs/locale/uk';
-import { useState } from 'react';
 import type {
   ITransmitionTypes,
   SelectOptionType,
 } from '../../../../types/types';
 
-export type BaseFieldProps = {
-  placeholder?: string;
-  name: string;
-  label: string;
-  required: boolean;
-};
-
-type TransmissionTypeFieldProps = BaseFieldProps & {
+type TransmissionTypeFieldProps = {
   types: ITransmitionTypes[];
+  defaultValue: string;
+  onChange: (value: string) => void;
 };
 
 export const TransmisionTypeField = (props: TransmissionTypeFieldProps) => {
-  const [value, setValue] = useState<string | null>(null);
   const options = props.types.reduce<Record<string, SelectOptionType>>(
     (acc, curr) => {
       acc[curr.id] = {
@@ -31,17 +24,13 @@ export const TransmisionTypeField = (props: TransmissionTypeFieldProps) => {
   );
 
   return (
-    <Form.Item
-      layout="vertical"
-      label={props.label}
-      name={props.name}
-      rules={[{ required: props.required, message: 'Оберіть вид передачі' }]}>
-      <Select
-        value={value}
-        style={{ width: '100%' }}
-        onChange={setValue}
-        options={Object.values(options)}
-      />
-    </Form.Item>
+    <Select<string>
+      defaultValue={props.defaultValue}
+      onChange={props.onChange}
+      style={{ width: '100%' }}
+      options={Object.values(options)}
+      size="large"
+      placeholder=" "
+    />
   );
 };
