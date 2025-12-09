@@ -202,23 +202,14 @@ export const AbonentBlock: FC<Props> = ({
               <Form.Item
                 noStyle
                 shouldUpdate={(prev, curr) => {
-                  const prevIds = prev[whoFieldName]
-                    .filter(Boolean)
-                    .map(({ id }) => id)
-                    .join();
-
-                  const nextIds = curr[whoFieldName]
-                    .filter(Boolean)
-                    .map(({ id }) => id)
-                    .join();
-                  return prevIds !== nextIds;
+                  return (
+                    prev[whoFieldName]?.join() !== curr[whoFieldName]?.join()
+                  );
                 }}>
                 {({ getFieldValue }) => {
-                  // const defaultValue =
-                  //   getFieldValue(whoFieldName)?.filter(Boolean);
-                  const defaultValue = form.getFieldValue(whoFieldName);
+                  const defaultValue =
+                    getFieldValue(whoFieldName)?.filter(Boolean);
 
-                  console.log('DEFAULT VAKUE', whoFieldName, defaultValue);
                   return (
                     <WhoField
                       label={whoFieldLabel}

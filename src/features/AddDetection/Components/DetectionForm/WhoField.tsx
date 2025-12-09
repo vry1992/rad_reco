@@ -68,10 +68,20 @@ export const WhoField = (props: WhoFieldInputProps) => {
     props.onAbonentChange([...selectedShips, ...selectedUnits]);
   };
 
-  const onAbonentChange = (added: string) => {
-    const newValue = [...value, added];
+  const onAbonentChange = (added: string, prevValue?: string) => {
+    let newValue = [];
+    if (prevValue) {
+      newValue = value.map((id) => {
+        if (id === prevValue) {
+          return added;
+        }
+        return id;
+      });
+    } else {
+      newValue = [...value, added];
+      setAddCount((prev) => prev + 1);
+    }
     setValue(newValue);
-    setAddCount((prev) => prev + 1);
     changeReaction(newValue);
   };
 
@@ -103,7 +113,9 @@ export const WhoField = (props: WhoFieldInputProps) => {
                   size="large"
                   treeData={options}
                   value={value[field.name]}
-                  onChange={onAbonentChange}
+                  onSelect={(id: string) => {
+                    onAbonentChange(id, value[field.name]);
+                  }}
                   showCheckedStrategy={TreeSelect.SHOW_CHILD}
                   filterTreeNode={(input: string, treeNode: DataNode) => {
                     const inputLower = input.toLowerCase();

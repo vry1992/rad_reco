@@ -191,8 +191,8 @@ export const DetectionForm: FC<Props> = ({
   };
 
   const updateSelectedIds = () => {
-    const from = form.getFieldValue('abonentsFrom');
-    const to = form.getFieldValue('abonentsTo');
+    const from = form.getFieldValue('abonentsFrom') || [];
+    const to = form.getFieldValue('abonentsTo') || [];
 
     setSelectedObjectIds([...to, ...from].map(({ id }) => id));
   };
