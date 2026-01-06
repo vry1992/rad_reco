@@ -1,5 +1,5 @@
 import { Col, Divider, List, Row, Typography } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { IDetection, INetwork } from '../../../types/types';
 import { debounce } from '../../../utils';
@@ -45,10 +45,6 @@ export const Detection = () => {
     }
   }, [searchParams, id]);
 
-  const onPreviewClick = useCallback((detection: IDetection) => {
-    navigate(detection.network.id, { state: detection });
-  }, []);
-
   return (
     <>
       <Row>
@@ -88,10 +84,7 @@ export const Detection = () => {
             dataSource={lastDetecitions}
             renderItem={(detection) => {
               return (
-                <List.Item
-                  key={detection.id}
-                  className={classes.listItem}
-                  onClick={() => onPreviewClick(detection)}>
+                <List.Item key={detection.id} className={classes.listItem}>
                   <LastNetworkDetectionPreview detection={detection} />
                 </List.Item>
               );

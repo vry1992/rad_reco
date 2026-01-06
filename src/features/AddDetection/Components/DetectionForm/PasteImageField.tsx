@@ -6,7 +6,9 @@ export const PasteImageField: React.FC<{
   onChange: (files: UploadFile[]) => void;
   title: string;
   limit?: number;
+  initFileList?: UploadFile[];
 }> = (props) => {
+  const limit = props.limit ? props.limit : 1;
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
@@ -26,7 +28,6 @@ export const PasteImageField: React.FC<{
     if (!file) return;
 
     const uid = String(Date.now());
-
     setFileList((prev) => {
       return [
         ...prev,
@@ -36,22 +37,37 @@ export const PasteImageField: React.FC<{
           status: 'done',
           originFileObj: file as RcFile,
           url: URL.createObjectURL(file),
-        },
+        } as UploadFile,
       ];
     });
   }, []);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
-    if (props.limit && fileList?.length === props.limit) {
+    if (fileList?.length === limit) {
       document.removeEventListener('paste', handlePaste);
     }
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste, props.limit, fileList]);
 
   useEffect(() => {
-    props.onChange(fileList);
-  }, [fileList]);
+    if (props.initFileList) {
+      setFileList(props.initFileList);
+    }
+  }, [props.initFileList]);
+
+  useEffect(() => {
+    if (props.initFileList) {
+      const hasDiff = fileList.some(({ uid }) => {
+        return props.initFileList?.find((init) => init.uid !== uid);
+      });
+      if (props.initFileList?.length !== fileList.length || hasDiff) {
+        props.onChange(fileList);
+      }
+    } else {
+      props.onChange(fileList);
+    }
+  }, [props.initFileList, fileList]);
 
   return (
     <div ref={containerRef} tabIndex={0}>

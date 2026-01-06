@@ -27,11 +27,19 @@ export interface IUnit {
 export interface IAircraft {
   id: string;
   name: string;
+  family: string;
 }
 
 export interface ITransmitionTypes {
   id: string;
   name: string;
+  protocol: string;
+  transmissionType: string;
+  centralFrequency: string;
+  usageNetworks?: string[];
+  abonents?: string[];
+  additionalInformation?: string;
+  imageNames?: string[];
 }
 
 export interface IDetection {

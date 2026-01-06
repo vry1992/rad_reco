@@ -1,7 +1,8 @@
-import { Image, Typography } from 'antd';
+import { Typography } from 'antd';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
-import { Fragment, useEffect, useState, type FC } from 'react';
+import { Fragment, useCallback, type FC } from 'react';
+import { useNavigate } from 'react-router';
 import { DATE_TIME_FORMAT } from '../../../constants';
 import {
   AbonentDirectionEnum,
@@ -10,7 +11,6 @@ import {
   type IUnit,
 } from '../../../types/types';
 import { buildShipLabel, buildUnitsLabel } from '../../../utils';
-import { DetectionsService } from '../services/detections-service';
 import classes from './style.module.scss';
 
 type Props = {
@@ -22,8 +22,10 @@ type DirectionData = { ships: IShip[]; units: IUnit[] };
 const separator = ' / ';
 
 export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
+  const navigate = useNavigate();
   const { network, abonents, timeOfDetection } = detection;
-  const [fromImg, setFromImg] = useState<string | undefined>();
+  // const [fromImg, setFromImg] = useState<string | undefined>();
+  // const [toImg, setToImg] = useState<string | undefined>();
 
   const data = abonents.reduce<Record<AbonentDirectionEnum, DirectionData>>(
     (acc, curr) => {
@@ -67,25 +69,44 @@ export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
 
   const to = [...toShips, ...toUnits].join(separator);
 
-  useEffect(() => {
-    const aaa = async () => {
-      const data = await DetectionsService.getScreenshot(
-        detection.network.id,
-        detection.id,
-        'from.png'
-      );
-      if (data.size) {
-        const fromImgUrl = URL.createObjectURL(data);
-        setFromImg(fromImgUrl);
-      }
-    };
+  // useEffect(() => {
+  //   const getFrom = async () => {
+  //     const data = await DetectionsService.getScreenshot(
+  //       detection.network.id,
+  //       detection.id,
+  //       'from.png'
+  //     );
+  //     if (data.size) {
+  //       const url = URL.createObjectURL(data);
+  //       setFromImg(url);
+  //     }
+  //   };
 
-    aaa();
+  //   const getTo = async () => {
+  //     const data = await DetectionsService.getScreenshot(
+  //       detection.network.id,
+  //       detection.id,
+  //       'to.png'
+  //     );
+  //     if (data.size) {
+  //       const url = URL.createObjectURL(data);
+  //       setToImg(url);
+  //     }
+  //   };
+
+  //   getFrom();
+  //   getTo();
+  // }, []);
+
+  const onPreviewClick = useCallback(() => {
+    navigate(detection.network.id, { state: detection });
   }, []);
 
   return (
     <Fragment>
-      <div className={classes.detectionPreviewContainer}>
+      <div
+        className={classes.detectionPreviewContainer}
+        onClick={onPreviewClick}>
         <Typography.Title className={classes.title} level={5}>
           {network.name}
         </Typography.Title>
@@ -116,10 +137,7 @@ export const LastNetworkDetectionPreview: FC<Props> = ({ detection }) => {
           className={classNames([classes.paragraph, classes.rightAligned])}>
           <b>{dayjs(timeOfDetection).format(DATE_TIME_FORMAT)}</b>
         </Typography.Paragraph>
-        <Image src={fromImg} width={'160px'} />
       </div>
-
-      {/* <img src={fromImg} alt="File" /> */}
     </Fragment>
   );
 };

@@ -3,8 +3,11 @@ import { Button, Form, TreeSelect, type TreeSelectProps } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { DataNode } from 'rc-tree-select/lib/interface';
 import { useEffect, useState } from 'react';
-import type { IShip, IUnit } from '../../../../types/types';
-import { groupToShipsTreeSelect } from '../../../../utils';
+import type { IAircraft, IShip, IUnit } from '../../../../types/types';
+import {
+  groupToAircraftsTreeSelect,
+  groupToShipsTreeSelect,
+} from '../../../../utils';
 import { buildUnitsNestingForTree } from '../../../CombatFormation/utils';
 import { buildUnitsNesting } from '../../utils';
 import type { AbonentFormValueType, BaseFieldProps } from './DetectionForm';
@@ -14,6 +17,7 @@ type WhoFieldInputProps = BaseFieldProps & {
   onAbonentChange: (value: AbonentFormValueType) => void;
   ships: IShip[];
   units: IUnit[];
+  aircrafts: IAircraft[];
   name: string;
   selectedIds: string[];
 };
@@ -44,6 +48,11 @@ export const WhoField = (props: WhoFieldInputProps) => {
     selectedIds: props.selectedIds,
   });
 
+  const groupedAircrafts = groupToAircraftsTreeSelect({
+    data: props.aircrafts,
+    selectedIds: props.selectedIds,
+  });
+
   const options: TreeSelectProps['treeData'] = [
     {
       title: 'Кораблі',
@@ -51,6 +60,14 @@ export const WhoField = (props: WhoFieldInputProps) => {
       value: 'ship',
       selectable: false,
       children: groupedShips,
+    },
+    {
+      title: 'Літаки',
+      key: 'aircrafts',
+      value: 'aircrafts',
+      selectable: false,
+      checkable: false,
+      children: groupedAircrafts,
     },
     {
       title: 'Підрозділи',

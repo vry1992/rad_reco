@@ -5,14 +5,18 @@ import {
   InputNumber,
   Tree,
   Typography,
-  type FormInstance,
   type UploadFile,
 } from 'antd';
 import type { DataNode, EventDataNode } from 'antd/es/tree';
 import { type CheckInfo } from 'rc-tree/lib/Tree';
 import { useCallback, useEffect, useState, type FC, type Key } from 'react';
 import { CALLSIGN_PREFIX } from '../../../../constants';
-import type { IAbonent, IShip, IUnit } from '../../../../types/types';
+import type {
+  IAbonent,
+  IAircraft,
+  IShip,
+  IUnit,
+} from '../../../../types/types';
 import { HorizontalScroll } from '../../../../ui/HorizontalScroll';
 import { InputWrapper } from '../../../../ui/InputWrapper';
 import { buildShipLabel, buildUnitsLabel } from '../../../../utils';
@@ -20,7 +24,6 @@ import { DetectionsService } from '../../../Detection/services/detections-servic
 import type {
   AbonentFormValueType,
   DetectionFormFieldName,
-  DetectionFormValues,
 } from './DetectionForm';
 import { PasteImageField } from './PasteImageField';
 import { WhoField } from './WhoField';
@@ -36,7 +39,7 @@ type Props = {
   pelengFieldLabel?: string;
   ships: IShip[];
   units: IUnit[];
-  form: FormInstance<DetectionFormValues>;
+  aircrafts: IAircraft[];
   callsigns: Pick<IAbonent, 'callsign'>[];
   selectedObjetcIds: string[];
   onChangeCallsign: (objects: Array<IShip | IUnit>, callsign?: string) => void;
@@ -55,9 +58,9 @@ export const AbonentBlock: FC<Props> = ({
   label,
   ships,
   units,
+  aircrafts,
   callsigns,
   selectedObjetcIds,
-  form,
   onChangeCallsign,
   onWhoChange,
   onScreenshotChange,
@@ -71,6 +74,7 @@ export const AbonentBlock: FC<Props> = ({
         key: callsign,
         selectable: true,
         checkable: true,
+        className: 'head',
       } as DataNode;
     });
 
@@ -102,29 +106,51 @@ export const AbonentBlock: FC<Props> = ({
     };
   };
 
+  const getMainNodeKey = (info: CheckInfo): string => {
+    const checkedNode = info.checkedNodes.find(
+      ({ className }) => className === 'head'
+    );
+    return (
+      (checkedNode?.key as string) ||
+      (info.halfCheckedKeys?.[0] as string) ||
+      (info.node.key as string)
+    );
+  };
+
+  const checkIsMainNode = (node: EventDataNode<DataNode>): boolean => {
+    const isHead = node.className === 'head';
+    return isHead;
+  };
+
   const onCheckCallsigns = useCallback(
     async (
-      checked: { checked: Key[]; halfChecked: Key[] } | Key[],
+      checked: Key[] | { checked: Key[]; halfChecked: Key[] },
       info: CheckInfo
     ) => {
-      const selectedIds = Array.isArray(checked) ? checked : checked.checked;
+      const allChecked = Array.isArray(checked) ? checked : checked.checked;
+      if (!allChecked.length) {
+        onChangeCallsign([], '');
+        return;
+      }
+      const mainNodeKey = getMainNodeKey(info);
+      const isMainNode = checkIsMainNode(info.node);
 
-      const checkedCallsign =
-        (info.halfCheckedKeys?.[0] as string) ||
-        treeData.find(({ key }) => selectedIds.includes(key))?.key;
+      const abonents = await fetchChildren(mainNodeKey);
+      const selectedObjects: Array<IShip | IUnit> = abonents
+        .filter((item) => item.ship || item.unit)
+        .map(({ ship, unit }) => {
+          return ship || unit;
+        }) as Array<IShip | IUnit>;
 
-      if (checkedCallsign) {
-        const hasChildren = treeData.find(({ key }) =>
-          selectedIds.includes(key)
-        )?.children?.length;
-
-        const abonents = await fetchChildren(checkedCallsign as string);
-        const children = prepareTreeDataFromChildren(abonents);
+      if (isMainNode) {
+        const hasChildren = treeData.find(({ key }) => key === info.node.key)
+          ?.children?.length;
 
         if (!hasChildren) {
+          const children = prepareTreeDataFromChildren(abonents);
           setTreeData((prev) => {
             return prev.map((prevTree) => {
-              if (prevTree.key === checkedCallsign) {
+              if (prevTree.key === info.node.key) {
                 prevTree.children = children;
               }
               return prevTree;
@@ -132,21 +158,12 @@ export const AbonentBlock: FC<Props> = ({
           });
         }
 
-        const selectedObjects: Array<IShip | IUnit> = abonents
-          .filter((item) => item.ship || item.unit)
-          .map(({ ship, unit }) => {
-            if (ship) {
-              return ship;
-            }
-            return unit;
-          }) as Array<IShip | IUnit>;
-
-        onChangeCallsign(
-          selectedObjects,
-          checkedCallsign as string | undefined
-        );
+        onChangeCallsign(selectedObjects, mainNodeKey);
       } else {
-        onChangeCallsign([]);
+        const objects = selectedObjects.filter(({ id }) => {
+          return allChecked.includes(id);
+        });
+        onChangeCallsign(objects, mainNodeKey);
       }
     },
     [callsigns, treeData]
@@ -218,6 +235,7 @@ export const AbonentBlock: FC<Props> = ({
                       defaultValue={defaultValue}
                       ships={ships}
                       units={units}
+                      aircrafts={aircrafts}
                       selectedIds={selectedObjetcIds}
                     />
                   );
@@ -227,39 +245,56 @@ export const AbonentBlock: FC<Props> = ({
               <Form.Item
                 noStyle
                 shouldUpdate={(prev, curr) => {
-                  return prev[callsignFieldName] !== curr[callsignFieldName];
+                  return (
+                    prev[callsignFieldName] !== curr[callsignFieldName] ||
+                    prev[whoFieldName]?.join() !== curr[whoFieldName]?.join()
+                  );
                 }}>
                 {({ getFieldValue }) => {
+                  const selectedChildren: Array<IShip | IUnit> =
+                    getFieldValue(whoFieldName);
+
                   return (
                     <>
-                      <InputWrapper
-                        name={callsignFieldName}
-                        label={callsignFieldLabel}>
-                        <Input
-                          placeholder=" "
-                          value={getFieldValue(callsignFieldName)}
-                          defaultValue={getFieldValue(callsignFieldName)}
-                        />
+                      <InputWrapper label={callsignFieldLabel}>
+                        <Form.Item name={callsignFieldName}>
+                          <Input placeholder=" " />
+                        </Form.Item>
                       </InputWrapper>
                       <HorizontalScroll>
                         <div
                           style={{
                             display: 'flex',
                           }}>
-                          {treeData.map((item) => {
-                            const checked = getFieldValue(callsignFieldName);
-                            return (
-                              <Tree
-                                key={`${callsignFieldName}_${item.key}`}
-                                selectable
-                                checkable
-                                treeData={[item]}
-                                onCheck={onCheckCallsigns}
-                                checkedKeys={checked ? [checked] : []}
-                                loadData={loadData}
-                              />
-                            );
-                          })}
+                          {treeData
+                            .sort((a) => {
+                              const checked = getFieldValue(callsignFieldName);
+                              return checked === a.key ? -1 : 1;
+                            })
+                            .map((item) => {
+                              const checked = getFieldValue(callsignFieldName);
+                              let checkedKeys =
+                                checked && selectedChildren.length
+                                  ? [checked]
+                                  : [];
+                              if (checked === item.key && !!item.children) {
+                                checkedKeys = selectedChildren
+                                  .filter(Boolean)
+                                  .map(({ id }) => id);
+                              }
+
+                              return (
+                                <Tree
+                                  key={`${callsignFieldName}_${item.key}`}
+                                  selectable
+                                  checkable
+                                  treeData={[item]}
+                                  onCheck={onCheckCallsigns}
+                                  checkedKeys={checkedKeys}
+                                  loadData={loadData}
+                                />
+                              );
+                            })}
                         </div>
                       </HorizontalScroll>
                     </>
@@ -267,17 +302,18 @@ export const AbonentBlock: FC<Props> = ({
                 }}
               </Form.Item>
 
-              <InputWrapper name={pelengFieldName} label={pelengFieldLabel}>
-                <InputNumber<string>
-                  min="0"
-                  max="360"
-                  step="0.5"
-                  stringMode
-                  style={{ width: '100%', marginTop: 5 }}
-                  placeholder=" "
-                  size="large"
-                  defaultValue={form.getFieldValue(pelengFieldName)}
-                />
+              <InputWrapper label={pelengFieldLabel}>
+                <Form.Item name={pelengFieldName}>
+                  <InputNumber<string>
+                    min="0"
+                    max="360"
+                    step="0.5"
+                    stringMode
+                    style={{ width: '100%', marginTop: 5 }}
+                    placeholder=" "
+                    size="large"
+                  />
+                </Form.Item>
               </InputWrapper>
               <PasteImageField
                 onChange={onScreenshotChange}

@@ -1,11 +1,11 @@
 import { api } from '../../../services/api';
-import type { IDetection, INetwork, ITemplate } from '../../../types/types';
+import type { IDetection, INetwork } from '../../../types/types';
 
 const getNetwork = async (networkId: string): Promise<INetwork> => {
   return api.get(`/network/${networkId}`);
 };
 
-const getNetworkTemplate = async (networkId: string): Promise<ITemplate> => {
+const getNetworkTemplate = async (networkId: string): Promise<INetwork> => {
   return api.get(`/network/${networkId}/template`);
 };
 

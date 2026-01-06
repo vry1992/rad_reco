@@ -4,9 +4,11 @@ import { Button, Col, Row, Typography } from 'antd';
 import 'dayjs/locale/uk';
 import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
 import { useParams } from 'react-router';
+import { AircraftService } from '../../../../services/aircraft-service';
 import {
   AbonentDirectionEnum,
   type IAbonent,
+  type IAircraft,
   type IDetection,
   type IShip,
   type ITransmitionTypes,
@@ -73,6 +75,7 @@ export const DetectionForm: FC<Props> = ({
   const [form] = Form.useForm<DetectionFormValues>();
   const [ships, setShips] = useState<IShip[]>([]);
   const [units, setUnits] = useState<IUnit[]>([]);
+  const [aircrafts, setAircrafts] = useState<IAircraft[]>([]);
   const [frequencies, setFrequencies] = useState<
     Pick<IDetection, 'frequency'>[]
   >([]);
@@ -165,27 +168,27 @@ export const DetectionForm: FC<Props> = ({
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
-      const [rawShips, rawUnits, [rawTt]] = await Promise.all([
+      const [rawShips, rawUnits, [rawTt], [rawAircrafts]] = await Promise.all([
         AddDetectionService.getAllShips(),
         AddDetectionService.getAllUnits(),
         TransmissionTypesService.getTransmitionTypes(),
+        AircraftService.getAll(),
       ]);
       setShips(rawShips);
       setUnits(rawUnits);
       setTransmitionsTypes(rawTt);
+      setAircrafts(rawAircrafts);
     };
 
     fetchDataForWhoFields();
   }, []);
 
   const onAbonentToChange = (value: AbonentFormValueType) => {
-    console.log('abonentsTo => ', value);
     form.setFieldValue('abonentsTo', value);
     updateSelectedIds();
   };
 
   const onAbonentFromChange = (value: AbonentFormValueType) => {
-    console.log('abonentsFrom => ', value);
     form.setFieldValue('abonentsFrom', value);
     updateSelectedIds();
   };
@@ -221,10 +224,11 @@ export const DetectionForm: FC<Props> = ({
     objects: Array<IShip | IUnit>,
     callsign?: string
   ) => {
-    console.log('FROM OBJECTS => ', objects);
+    console.log('1 =>', callsign, '<=');
     form.setFieldValue('callsignFrom', callsign);
     form.setFieldValue('abonentsFrom', objects);
   };
+
   const onChangeCallsignTo = (
     objects: Array<IShip | IUnit>,
     callsign?: string
@@ -287,7 +291,7 @@ export const DetectionForm: FC<Props> = ({
                   pelengFieldLabel="Пеленг"
                   ships={ships}
                   units={units}
-                  form={form}
+                  aircrafts={aircrafts}
                   callsigns={callsigns}
                   selectedObjetcIds={selectedObjetcIds}
                   onChangeCallsign={onChangeCallsignFrom}
@@ -309,7 +313,7 @@ export const DetectionForm: FC<Props> = ({
                   pelengFieldLabel="Пеленг"
                   ships={ships}
                   units={units}
-                  form={form}
+                  aircrafts={aircrafts}
                   callsigns={callsigns}
                   selectedObjetcIds={selectedObjetcIds}
                   onChangeCallsign={onChangeCallsignTo}
@@ -334,26 +338,27 @@ export const DetectionForm: FC<Props> = ({
                   {({ getFieldValue, setFieldValue }) => {
                     return (
                       <>
-                        <InputWrapper
-                          name={'frequency'}
-                          label="Частота"
-                          rules={[
-                            {
-                              required: requiredFields.includes('frequency'),
-                              message: 'Вкажіть частоту',
-                            },
-                          ]}>
-                          <InputNumber<string>
-                            min="1000"
-                            step="0.5"
-                            stringMode
-                            style={{ width: '100%' }}
-                            suffix={'кГц'}
-                            size="large"
-                            placeholder=" "
-                            value={getFieldValue('frequency')}
-                            defaultValue={getFieldValue('frequency')}
-                          />
+                        <InputWrapper label="Частота">
+                          <Form.Item
+                            name={'frequency'}
+                            rules={[
+                              {
+                                required: requiredFields.includes('frequency'),
+                                message: 'Вкажіть частоту',
+                              },
+                            ]}>
+                            <InputNumber<string>
+                              min="1000"
+                              step="0.5"
+                              stringMode
+                              style={{ width: '100%' }}
+                              suffix={'кГц'}
+                              size="large"
+                              placeholder=" "
+                              value={getFieldValue('frequency')}
+                              defaultValue={getFieldValue('frequency')}
+                            />
+                          </Form.Item>
                         </InputWrapper>
 
                         {frequencies?.length ? (
@@ -379,29 +384,30 @@ export const DetectionForm: FC<Props> = ({
                 style={{
                   marginTop: 10,
                 }}>
-                <InputWrapper
-                  name={'transmissionType'}
-                  label="Вид передачі"
-                  rules={[
-                    {
-                      required: requiredFields.includes(field),
-                      message: 'Оберіть вид передачі',
-                    },
-                  ]}>
-                  <TransmisionTypeField
-                    types={transmitionTypes}
-                    onChange={onTransmissionTypeChange}
-                    defaultValue={form.getFieldValue('transmissionType')}
-                  />
+                <InputWrapper label="Вид передачі">
+                  <Form.Item
+                    name={'transmissionType'}
+                    rules={[
+                      {
+                        required: requiredFields.includes(field),
+                        message: 'Оберіть вид передачі',
+                      },
+                    ]}>
+                    <TransmisionTypeField
+                      types={transmitionTypes}
+                      onChange={onTransmissionTypeChange}
+                      defaultValue={form.getFieldValue('transmissionType')}
+                    />
+                  </Form.Item>
                 </InputWrapper>
               </Col>
             )}
             {field === 'additionalInformation' && (
               <Col xs={24} sm={24}>
-                <InputWrapper
-                  name={'additionalInformation'}
-                  label="Додаткова інформація">
-                  <Input.TextArea />
+                <InputWrapper label="Додаткова інформація">
+                  <Form.Item name={'additionalInformation'}>
+                    <Input.TextArea rows={5} />
+                  </Form.Item>
                 </InputWrapper>
               </Col>
             )}

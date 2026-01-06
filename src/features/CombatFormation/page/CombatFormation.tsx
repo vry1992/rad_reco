@@ -1,9 +1,8 @@
 import { HomeOutlined } from '@ant-design/icons';
-import { Button, Tree, type TreeDataNode, type TreeProps } from 'antd';
+import { Tree, type TreeDataNode, type TreeProps } from 'antd';
 import { useEffect, useState } from 'react';
 import type { IUnit } from '../../../types/types';
 import { AddDetectionService } from '../../AddDetection/services/add-detection.service';
-import { AddObjetcContainer } from '../components/AddObjetcContainer';
 import {
   ALLOW_NESTING_NODE_TYPE,
   NOT_ALLOW_NESTING_NODE_TYPE,
@@ -21,12 +20,27 @@ export interface ExtendedTreeDataNode extends TreeDataNode {
 
 export const CombatFormation = () => {
   const [gData, setGData] = useState<TreeDataNode[]>([]);
-  const [openForm, setOpenForm] = useState(false);
 
   useEffect(() => {
     const fetchDataForWhoFields = async () => {
       const rawUnits = await AddDetectionService.getAllUnits();
-      setGData(buildUnitsNestingForTree({ units: rawUnits, selectedIds: [] }));
+      const map = new Map();
+
+      rawUnits.forEach((u) => {
+        u.children = [];
+        map.set(u.id, u);
+      });
+
+      const roots = [];
+
+      for (const unit of rawUnits) {
+        if (unit.parent) {
+          map.get(unit.parent.id)?.children.push(unit);
+        } else {
+          roots.push(unit);
+        }
+      }
+      setGData(buildUnitsNestingForTree({ units: roots, selectedIds: [] }));
     };
 
     fetchDataForWhoFields();
@@ -127,7 +141,6 @@ export const CombatFormation = () => {
 
   return (
     <>
-      <AddObjetcContainer open={openForm} onClose={() => setOpenForm(false)} />
       <Tree
         className="draggable-tree"
         draggable
@@ -149,16 +162,6 @@ export const CombatFormation = () => {
         titleRender={(node: TreeDataNode) => {
           return (
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {node?.data.nodeType !== NOT_ALLOW_NESTING_NODE_TYPE ? (
-                <Button
-                  onClick={() => setOpenForm(true)}
-                  type="primary"
-                  style={{
-                    marginRight: '5px',
-                  }}>
-                  Додати
-                </Button>
-              ) : null}
               <div
                 style={{
                   textAlign: 'left',

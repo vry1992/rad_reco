@@ -1,5 +1,5 @@
 import { Button, Col, Row } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import type { IDetection, ITemplate } from '../../../types/types';
 import { NetworkService } from '../../Network/services/network-service';
@@ -15,7 +15,7 @@ export const AddDetection = () => {
   const [networkTemplate, setNetworkTemplate] = useState<ITemplate | null>(
     null
   );
-  const [isNetworkConfiguratorOpen, setNetworkConfigurator] = useState(false);
+  const [netName, setNetName] = useState<string>('');
 
   const [fieldsSetupMap, setFieldsSetupMap] = useState<TFieldsSetupMap>({
     [FieldsEnum.OFF]: [],
@@ -40,24 +40,6 @@ export const AddDetection = () => {
     setFieldsSetupMap(rawFieldsSetup);
   }, [networkTemplate]);
 
-  const onConfirmAddField = useCallback(
-    (field: string, type: FieldsEnum.ON | FieldsEnum.REQUIRED) => {
-      setFieldsSetupMap((prev) => {
-        const prevOff = prev[FieldsEnum.OFF];
-        const newOff = prevOff.filter((item) => item !== field);
-
-        const withNewField = [...prev[type], field];
-
-        return {
-          ...prev,
-          [FieldsEnum.OFF]: newOff,
-          [type]: withNewField,
-        };
-      });
-    },
-    [fieldsSetupMap]
-  );
-
   useEffect(() => {
     if (params.networkId) {
       const fetchNetwork = async () => {
@@ -65,7 +47,8 @@ export const AddDetection = () => {
           const data = await NetworkService.getNetworkTemplate(
             params.networkId!
           );
-          setNetworkTemplate(data);
+          setNetworkTemplate(data.template);
+          setNetName(data.name);
         } catch (error) {
           console.log(error);
         }
@@ -77,35 +60,16 @@ export const AddDetection = () => {
 
   return (
     <>
-      <Button type="primary" onClick={() => navigate(-1)}>{`<= Назад`}</Button>
+      <Button type="primary" onClick={() => navigate(-1)}>{`Назад`}</Button>
       <Row justify="space-between">
         <Col md={{ span: 18, offset: 3 }} xs={{ span: 24, offset: 0 }}>
           <DetectionForm
-            name={prevDetection?.network?.name || ''}
+            name={netName}
             fields={fieldsSetupMap[FieldsEnum.ON]}
             requiredFields={fieldsSetupMap[FieldsEnum.REQUIRED]}
             prevDetectionState={prevDetection}
           />
         </Col>
-
-        {/* <Col xs={2} sm={2}>
-          <Button
-            type="primary"
-            onClick={() => setNetworkConfigurator(!isNetworkConfiguratorOpen)}>
-            <DoubleLeftOutlined />
-          </Button>
-        </Col>
-
-        <Drawer
-          title="Конфігуратор мережі"
-          closable={true}
-          onClose={() => setNetworkConfigurator(!isNetworkConfiguratorOpen)}
-          open={isNetworkConfiguratorOpen}>
-          <AddFieldsToDetectionForm
-            fields={fieldsSetupMap[FieldsEnum.OFF]}
-            onConfirm={onConfirmAddField}
-          />
-        </Drawer> */}
       </Row>
     </>
   );

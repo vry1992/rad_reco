@@ -1,5 +1,5 @@
 import type { DataNode } from 'rc-tree-select/lib/interface';
-import type { IShip, IUnit } from './types/types';
+import type { IAircraft, IShip, IUnit } from './types/types';
 
 export const groupToShipsTreeSelect = <K extends keyof IShip>({
   data,
@@ -78,6 +78,47 @@ export const groupToUnitsTreeSelect = ({ data }: { data: IUnit[] }) => {
   return roots;
 };
 
+export const groupToAircraftsTreeSelect = ({
+  data,
+  selectedIds,
+}: {
+  data: IAircraft[];
+  selectedIds: string[];
+}) => {
+  const grouped = data.reduce<Record<string, DataNode>>((acc, curr) => {
+    const key = curr.family;
+    const prev = acc[key];
+
+    if (prev) {
+      prev.children?.push({
+        title: curr.name,
+        value: curr.id,
+        key: curr.id,
+        disabled: selectedIds.includes(curr.id),
+      });
+    } else {
+      acc[key] = {
+        key,
+        title: key,
+        value: key,
+        selectable: false,
+        checkable: false,
+        children: [
+          {
+            title: curr.name,
+            value: curr.id,
+            key: curr.id,
+            disabled: selectedIds.includes(curr.id),
+          },
+        ],
+      };
+    }
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+};
+
 export const buildShipLabel = (ship: IShip) => {
   return `${ship.type.abbreviatedType} пр.${ship.project} ${ship.name}`;
 };
@@ -120,3 +161,15 @@ export const debounce = (cb: () => void, ms: number = 300) => {
 
   _timeout = setTimeout(cb, ms);
 };
+
+import type { UploadFile } from 'antd/es/upload/interface';
+
+export function fileToUploadFile(file: File): UploadFile {
+  return {
+    uid: file.name + Date.now(),
+    name: file.name,
+    status: 'done',
+    originFileObj: file,
+    url: URL.createObjectURL(file),
+  };
+}
